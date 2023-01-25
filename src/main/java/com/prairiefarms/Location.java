@@ -220,7 +220,7 @@ public class Location {
 		textFrequency = frequency.equals("W") ? "Weekly" : "Monthly";
 
         try {
-            final AS400 system = new AS400(getHostLocal(), user, password);
+            final AS400 system = new AS400("127.0.0.1", user, password);
             QSYSObjectPathName path = new QSYSObjectPathName(schema.trim(), "DSINFO", "DTAARA");
             CharacterDataArea data = new CharacterDataArea(system, path.getPath());
 
