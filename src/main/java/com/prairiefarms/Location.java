@@ -4,7 +4,6 @@ import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.CharacterDataArea;
 import com.ibm.as400.access.QSYSObjectPathName;
 
-import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
