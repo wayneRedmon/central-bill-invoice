@@ -16,6 +16,10 @@ import java.util.ArrayList;
 public class Main {
 
     private static final String dataArea = "EB132NFO";
+    private static final long purgeTime = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
+    private static final SimpleDateFormat isoFormat = new SimpleDateFormat("yyyyMMdd");
+    private static final SimpleDateFormat usaFormat = new SimpleDateFormat("MM/dd/yyyy");
+    private static final SimpleDateFormat mdyFormat = new SimpleDateFormat("MMddyy");
 
     private static final String sqlBilling = "SELECT * "
             + "FROM ds_BIL "
@@ -116,54 +120,25 @@ public class Main {
             + "item_Number "
             + "FOR FETCH ONLY";
 
-    private static final long purgeTime = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
-
-    private static SimpleDateFormat isoFormat = new SimpleDateFormat("yyyyMMdd");
-    private static SimpleDateFormat usaFormat = new SimpleDateFormat("MM/dd/yyyy");
-    private static SimpleDateFormat mdyFormat = new SimpleDateFormat("MMddyy");
-
     private static Connection connection;
-
     private static Statement statementBilling;
-    private static ResultSet resultsetBilling;
-
     private static PreparedStatement statementRemit;
-    private static ResultSet resultsetRemit;
-
     private static PreparedStatement statementInvoice;
-    private static ResultSet resultsetInvoice;
-
     private static PreparedStatement statementCustomer;
-    private static ResultSet resultsetCustomer;
-
     private static PreparedStatement statementTerms;
-    private static ResultSet resultsetTerms;
-
     private static PreparedStatement statementSalesperson;
-    private static ResultSet resultsetSalesperson;
-
     private static PreparedStatement statementPurchaseOrder;
-    private static ResultSet resultsetPurchaseOrder;
-
     private static PreparedStatement statementItem;
-    private static ResultSet resultsetItem;
-
     private static PreparedStatement statementProductSummary;
-    private static ResultSet resultsetProductSummary;
+    private static ResultSet resultSetBilling;
+    private static ResultSet resultSetInvoice;
+    private static ResultSet resultSetItem;
 
     private static XFi_Invoice document;
 
-    private static File directorySent;
-    private static Path movefrom;
-    private static Path target;
-
-    private static String schema;
-    private static String locale;
     private static String frequency;
     private static String date;
-
     private static String fileName;
-
     private static Location location;
     private static CentralBill centralBill;
     private static Terms terms;
@@ -173,18 +148,10 @@ public class Main {
     private static PurchaseOrder purchaseOrder;
     private static Invoice invoice;
     private static Item item;
-    private static Email email;
-
-    private static ArrayList<Item> items;
-
-    private static StringBuilder stringInvoice;
-
-    private static String[] attachment;
-
 
     public static void main(String[] args) {
-        schema = args[0];
-        locale = args[1];
+        String schema = args[0];
+        String locale = args[1];
         frequency = args[2];
         date = args[3];
         String username = args[4];
@@ -217,11 +184,11 @@ public class Main {
             e1.printStackTrace();
         } finally {
             try {
-                resultsetBilling.close();
+                resultSetBilling.close();
                 statementBilling.close();
-                resultsetInvoice.close();
+                resultSetInvoice.close();
                 statementInvoice.close();
-                resultsetItem.close();
+                resultSetItem.close();
                 statementItem.close();
                 connection.close();
             } catch (SQLException e) {
@@ -243,19 +210,19 @@ public class Main {
             statementItem = connection.prepareStatement(sqlItem);
             statementProductSummary = connection.prepareStatement(sqlProductSummary);
 
-            resultsetBilling = statementBilling.executeQuery(sqlBilling);
+            resultSetBilling = statementBilling.executeQuery(sqlBilling);
 
-            while (resultsetBilling.next()) {
+            while (resultSetBilling.next()) {
                 try {
                     fileName = "Invoice_"
-                            + String.format("%03d", resultsetBilling.getInt("BIL#"))
+                            + String.format("%03d", resultSetBilling.getInt("BIL#"))
                             + "_"
                             + isoFormat.format(mdyFormat.parse(date));
                 } catch (ParseException e) {
                     throw new RuntimeException(e);
                 }
 
-                if (resultsetBilling.getString("BILSNDEML").equals("W")) {
+                if (resultSetBilling.getString("BILSNDEML").equals("W")) {
                     document = new XFi_Invoice_XLS();
                     fileName = fileName.trim() + ".xls";
                 } else {
@@ -275,11 +242,11 @@ public class Main {
 
                 transmit();
 
-                movefrom = FileSystems.getDefault().getPath(location.getEmailBoxOutgoing().trim() + fileName.trim());
-                target = FileSystems.getDefault().getPath(location.getEmailBoxSent() + fileName.trim());
+                Path moveFrom = FileSystems.getDefault().getPath(location.getEmailBoxOutgoing().trim() + fileName.trim());
+                Path moveTo = FileSystems.getDefault().getPath(location.getEmailBoxSent() + fileName.trim());
 
                 try {
-                    Files.move(movefrom, target, StandardCopyOption.REPLACE_EXISTING);
+                    Files.move(moveFrom, moveTo, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -293,18 +260,18 @@ public class Main {
         centralBill = new CentralBill();
 
         try {
-            centralBill.setID(resultsetBilling.getInt("BIL#"));
-            centralBill.setName(resultsetBilling.getString("BILCUSNAM"));
-            centralBill.setAddress1(resultsetBilling.getString("BILADDR"));
-            centralBill.setCity(resultsetBilling.getString("BILCITY"));
-            centralBill.setStateProvince(resultsetBilling.getString("BILSTATE"));
-            centralBill.setPostalCode(resultsetBilling.getString("BILZIPCD"));
-            centralBill.setPhone(resultsetBilling.getString("BILPHONE"));
-            centralBill.setEmailType(resultsetBilling.getString("BILSNDEML"));
-            centralBill.setEmailAddress(resultsetBilling.getString("BILEMLADR"));
-            centralBill.setRemitID(resultsetBilling.getInt("BILHDGCD"));
-            centralBill.setDiscountRate(resultsetBilling.getDouble("BILDISCNT"));
-            centralBill.setStatus(resultsetBilling.getString("BILSTATUS"));
+            centralBill.setID(resultSetBilling.getInt("BIL#"));
+            centralBill.setName(resultSetBilling.getString("BILCUSNAM"));
+            centralBill.setAddress1(resultSetBilling.getString("BILADDR"));
+            centralBill.setCity(resultSetBilling.getString("BILCITY"));
+            centralBill.setStateProvince(resultSetBilling.getString("BILSTATE"));
+            centralBill.setPostalCode(resultSetBilling.getString("BILZIPCD"));
+            centralBill.setPhone(resultSetBilling.getString("BILPHONE"));
+            centralBill.setEmailType(resultSetBilling.getString("BILSNDEML"));
+            centralBill.setEmailAddress(resultSetBilling.getString("BILEMLADR"));
+            centralBill.setRemitID(resultSetBilling.getInt("BILHDGCD"));
+            centralBill.setDiscountRate(resultSetBilling.getDouble("BILDISCNT"));
+            centralBill.setStatus(resultSetBilling.getString("BILSTATUS"));
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -315,17 +282,17 @@ public class Main {
 
         try {
             statementRemit.setInt(1, centralBill.getRemitID());
-            resultsetRemit = statementRemit.executeQuery();
+            ResultSet resultSetRemit = statementRemit.executeQuery();
 
-            if (resultsetRemit.next()) {
-                remit.setID(resultsetRemit.getInt("HDG#"));
-                remit.setName(resultsetRemit.getString("HDGNAMERE"));
-                remit.setAddress1(resultsetRemit.getString("HDGADDRRE"));
-                remit.setCity(resultsetRemit.getString("HDGCITYRE"));
-                remit.setStateProvince(resultsetRemit.getString("HDGSTATERE"));
-                remit.setPostalCode(resultsetRemit.getString("HDGZIPCDRE"));
-                remit.setPhone(resultsetRemit.getLong("HDGPHONERE"));
-                remit.setFax(resultsetRemit.getLong("HDGFAX#1"));
+            if (resultSetRemit.next()) {
+                remit.setID(resultSetRemit.getInt("HDG#"));
+                remit.setName(resultSetRemit.getString("HDGNAMERE"));
+                remit.setAddress1(resultSetRemit.getString("HDGADDRRE"));
+                remit.setCity(resultSetRemit.getString("HDGCITYRE"));
+                remit.setStateProvince(resultSetRemit.getString("HDGSTATERE"));
+                remit.setPostalCode(resultSetRemit.getString("HDGZIPCDRE"));
+                remit.setPhone(resultSetRemit.getLong("HDGPHONERE"));
+                remit.setFax(resultSetRemit.getLong("HDGFAX#1"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -335,9 +302,9 @@ public class Main {
     private static void setInvoice() {
         try {
             statementInvoice.setInt(1, centralBill.getID());
-            resultsetInvoice = statementInvoice.executeQuery();
+            resultSetInvoice = statementInvoice.executeQuery();
 
-            while (resultsetInvoice.next()) {
+            while (resultSetInvoice.next()) {
                 setCustomer();
                 setTerms();
                 setSalesperson();
@@ -351,21 +318,21 @@ public class Main {
                 invoice.setRemit(remit);
 
                 try {
-                    invoice.setDeliveryDate(resultsetInvoice.getDate("DELIVER_DATE"));
+                    invoice.setDeliveryDate(resultSetInvoice.getDate("DELIVER_DATE"));
                     invoice.setInvoiceDate(mdyFormat.parse(date));
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
 
-                invoice.setID(resultsetInvoice.getInt("INVOICE_NUMBER"));
+                invoice.setID(resultSetInvoice.getInt("INVOICE_NUMBER"));
                 invoice.setUseExtendedID(false);
 
-                if (resultsetInvoice.getInt("useExtendedInvoice") == 1) {
-                    stringInvoice = new StringBuilder(16);
+                if (resultSetInvoice.getInt("useExtendedInvoice") == 1) {
+                    StringBuilder stringInvoice = new StringBuilder(16);
 
                     stringInvoice.append(String.format("%03d", location.getID()));
-                    stringInvoice.append(mdyFormat.format(resultsetInvoice.getDate("DELIVER_DATE")));
-                    stringInvoice.append(resultsetInvoice.getInt("INVOICE_NUMBER"));
+                    stringInvoice.append(mdyFormat.format(resultSetInvoice.getDate("DELIVER_DATE")));
+                    stringInvoice.append(resultSetInvoice.getInt("INVOICE_NUMBER"));
 
                     invoice.setUseExtendedID(true);
                     invoice.setExtendedID(stringInvoice.toString());
@@ -393,24 +360,24 @@ public class Main {
         customer = new Customer();
 
         try {
-            statementCustomer.setInt(1, resultsetInvoice.getInt("CUSTOMER"));
-            resultsetCustomer = statementCustomer.executeQuery();
+            statementCustomer.setInt(1, resultSetInvoice.getInt("CUSTOMER"));
+            ResultSet resultSetCustomer = statementCustomer.executeQuery();
 
-            if (resultsetCustomer.next()) {
-                customer.setID(resultsetCustomer.getInt("CUS#"));
-                customer.setName(resultsetCustomer.getString("CUSNAME"));
-                customer.setAddress1(resultsetCustomer.getString("CUSADDR"));
-                customer.setCity(resultsetCustomer.getString("CUSCITY"));
-                customer.setStateProvince(resultsetCustomer.getString("CUSSTATE"));
-                customer.setPostalCode(resultsetCustomer.getString("CUSZIPCD"));
-                customer.setPhone(resultsetCustomer.getString("CUSPHONE"));
-                customer.setTerms(resultsetCustomer.getInt("CUSPYMTTRM"));
-                customer.setSalesperson(resultsetCustomer.getInt("CUSSLSMAN"));
-                customer.setDiscount(resultsetCustomer.getDouble("CUSDSCRATE"));
-                customer.setTaxRate(resultsetCustomer.getDouble("CUSTAXRATE"));
-                customer.setEmailType(resultsetCustomer.getString("CUSSNDEMAI"));
-                customer.setEmailAddress(resultsetCustomer.getString("CUSEMAIL"));
-                customer.setStatus(resultsetCustomer.getString("CUSSTATUS"));
+            if (resultSetCustomer.next()) {
+                customer.setID(resultSetCustomer.getInt("CUS#"));
+                customer.setName(resultSetCustomer.getString("CUSNAME"));
+                customer.setAddress1(resultSetCustomer.getString("CUSADDR"));
+                customer.setCity(resultSetCustomer.getString("CUSCITY"));
+                customer.setStateProvince(resultSetCustomer.getString("CUSSTATE"));
+                customer.setPostalCode(resultSetCustomer.getString("CUSZIPCD"));
+                customer.setPhone(resultSetCustomer.getString("CUSPHONE"));
+                customer.setTerms(resultSetCustomer.getInt("CUSPYMTTRM"));
+                customer.setSalesperson(resultSetCustomer.getInt("CUSSLSMAN"));
+                customer.setDiscount(resultSetCustomer.getDouble("CUSDSCRATE"));
+                customer.setTaxRate(resultSetCustomer.getDouble("CUSTAXRATE"));
+                customer.setEmailType(resultSetCustomer.getString("CUSSNDEMAI"));
+                customer.setEmailAddress(resultSetCustomer.getString("CUSEMAIL"));
+                customer.setStatus(resultSetCustomer.getString("CUSSTATUS"));
             }
 
         } catch (SQLException e) {
@@ -423,14 +390,14 @@ public class Main {
 
         try {
             statementTerms.setInt(1, customer.getTerms());
-            resultsetTerms = statementTerms.executeQuery();
+            ResultSet resultSetTerms = statementTerms.executeQuery();
 
-            if (resultsetTerms.next()) {
-                terms.setID(resultsetTerms.getInt("TRM#"));
-                terms.setDescription(resultsetTerms.getString("TRMDESC"));
-                terms.setDueDays(resultsetTerms.getInt("TRMPAYDAYS"));
-                terms.setType(resultsetTerms.getString("TRMWM"));
-                terms.setDueByDate(resultsetInvoice.getDate("DELIVER_DATE"));
+            if (resultSetTerms.next()) {
+                terms.setID(resultSetTerms.getInt("TRM#"));
+                terms.setDescription(resultSetTerms.getString("TRMDESC"));
+                terms.setDueDays(resultSetTerms.getInt("TRMPAYDAYS"));
+                terms.setType(resultSetTerms.getString("TRMWM"));
+                terms.setDueByDate(resultSetInvoice.getDate("DELIVER_DATE"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -442,14 +409,14 @@ public class Main {
 
         try {
             statementSalesperson.setInt(1, customer.getSalesperson());
-            resultsetSalesperson = statementSalesperson.executeQuery();
+            ResultSet resultSetSalesperson = statementSalesperson.executeQuery();
 
-            if (resultsetSalesperson.next()) {
-                salesperson.setID(resultsetSalesperson.getInt("SLM#"));
-                salesperson.setName(resultsetSalesperson.getString("SLMNAME"));
-                salesperson.setLocation(resultsetSalesperson.getString("SLMLOCATN"));
-                salesperson.setEmailAddress(resultsetSalesperson.getString("SLMEMAIL"));
-                salesperson.setStatus(resultsetSalesperson.getString("SLMSTATUS"));
+            if (resultSetSalesperson.next()) {
+                salesperson.setID(resultSetSalesperson.getInt("SLM#"));
+                salesperson.setName(resultSetSalesperson.getString("SLMNAME"));
+                salesperson.setLocation(resultSetSalesperson.getString("SLMLOCATN"));
+                salesperson.setEmailAddress(resultSetSalesperson.getString("SLMEMAIL"));
+                salesperson.setStatus(resultSetSalesperson.getString("SLMSTATUS"));
             }
         } catch (SQLException e) {
             e.printStackTrace(System.err);
@@ -460,15 +427,15 @@ public class Main {
         purchaseOrder = new PurchaseOrder();
 
         try {
-            statementPurchaseOrder.setDate(1, resultsetInvoice.getDate("DELIVER_DATE"));
-            statementPurchaseOrder.setInt(2, resultsetInvoice.getInt("ROUTE"));
-            statementPurchaseOrder.setInt(3, resultsetInvoice.getInt("INVOICE_NUMBER"));
-            statementPurchaseOrder.setInt(4, resultsetInvoice.getInt("CUSTOMER"));
+            statementPurchaseOrder.setDate(1, resultSetInvoice.getDate("DELIVER_DATE"));
+            statementPurchaseOrder.setInt(2, resultSetInvoice.getInt("ROUTE"));
+            statementPurchaseOrder.setInt(3, resultSetInvoice.getInt("INVOICE_NUMBER"));
+            statementPurchaseOrder.setInt(4, resultSetInvoice.getInt("CUSTOMER"));
 
-            resultsetPurchaseOrder = statementPurchaseOrder.executeQuery();
+            ResultSet resultSetPurchaseOrder = statementPurchaseOrder.executeQuery();
 
-            if (resultsetPurchaseOrder.next()) {
-                purchaseOrder.setContract(resultsetPurchaseOrder.getString("ipoPO#"));
+            if (resultSetPurchaseOrder.next()) {
+                purchaseOrder.setContract(resultSetPurchaseOrder.getString("ipoPO#"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -480,24 +447,24 @@ public class Main {
         statementItem.setInt(2, customer.getID());
         statementItem.setInt(3, invoice.getID());
 
-        resultsetItem = statementItem.executeQuery();
+        resultSetItem = statementItem.executeQuery();
 
-        while (resultsetItem.next()) {
+        while (resultSetItem.next()) {
             item = new Item();
 
-            item.setID(resultsetItem.getInt("ITEM_NUMBER"));
-            item.setDescription(resultsetItem.getString("DESCRIPTION"));
-            item.setSalesType(resultsetItem.getString("SALES_TYPE"));
-            item.setQuantity(resultsetItem.getInt("QUANTITY"));
-            item.setExtension(resultsetItem.getDouble("EXTENSION"));
+            item.setID(resultSetItem.getInt("ITEM_NUMBER"));
+            item.setDescription(resultSetItem.getString("DESCRIPTION"));
+            item.setSalesType(resultSetItem.getString("SALES_TYPE"));
+            item.setQuantity(resultSetItem.getInt("QUANTITY"));
+            item.setExtension(resultSetItem.getDouble("EXTENSION"));
             item.setPrice(0);
             item.setPromotion(" ");
 
-            if (resultsetItem.getString("SALES_TYPE").equals("A")) {
-                item.setPrice(resultsetItem.getDouble("PRICE"));
+            if (resultSetItem.getString("SALES_TYPE").equals("A")) {
+                item.setPrice(resultSetItem.getDouble("PRICE"));
 
-                if (resultsetItem.getString("PROMOTION").equals("P")) {
-                    item.setPromotion(resultsetItem.getString("PROMOTION"));
+                if (resultSetItem.getString("PROMOTION").equals("P")) {
+                    item.setPromotion(resultSetItem.getString("PROMOTION"));
                 }
             }
 
@@ -507,20 +474,20 @@ public class Main {
     }
 
     private static void setProductSummary() throws SQLException {
-        items = new ArrayList<Item>();
+        ArrayList<Item> items = new ArrayList<Item>();
 
         statementProductSummary.setInt(1, centralBill.getID());
 
-        resultsetProductSummary = statementProductSummary.executeQuery();
+        ResultSet resultSetProductSummary = statementProductSummary.executeQuery();
 
-        while (resultsetProductSummary.next()) {
+        while (resultSetProductSummary.next()) {
             item = new Item();
 
-            item.setID(resultsetProductSummary.getInt("ITEM_NUMBER"));
-            item.setDescription(resultsetProductSummary.getString("PRDDESC"));
-            item.setQuantity(resultsetProductSummary.getInt("QUANTITY"));
-            item.setPrice(resultsetProductSummary.getDouble("PRICE"));
-            item.setExtension(resultsetProductSummary.getDouble("EXTENSION"));
+            item.setID(resultSetProductSummary.getInt("ITEM_NUMBER"));
+            item.setDescription(resultSetProductSummary.getString("PRDDESC"));
+            item.setQuantity(resultSetProductSummary.getInt("QUANTITY"));
+            item.setPrice(resultSetProductSummary.getDouble("PRICE"));
+            item.setExtension(resultSetProductSummary.getDouble("EXTENSION"));
 
             items.add(item);
         }
@@ -529,7 +496,7 @@ public class Main {
     }
 
     private static void transmit() {
-        email = new Email();
+        Email email = new Email();
 
         email.setCredentials(location.getUser(), location.getPassword());
         email.setMailHost(location.getHostEmail());
@@ -571,7 +538,7 @@ public class Main {
                     + remit.getPhone_Formatted());
         }
 
-        attachment = new String[1];
+        String[] attachment = new String[1];
         attachment[0] = location.getEmailBoxOutgoing().trim() + fileName.trim();
 
         email.setAttachment(attachment);
@@ -580,7 +547,7 @@ public class Main {
     }
 
     private static void maintainDirectory() {
-        directorySent = new File(location.getEmailBoxSent());
+        File directorySent = new File(location.getEmailBoxSent());
 
         if (location.getEmailBoxSent() != null &&
                 !location.getEmailBoxSent().trim().equals("") &&
