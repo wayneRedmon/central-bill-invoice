@@ -1,6 +1,10 @@
 package com.prairiefarms;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +18,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 public class Main {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     private static final String dataArea = "EB132NFO";
     private static final long purgeTime = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000);
@@ -157,6 +163,9 @@ public class Main {
         String username = args[4];
         String password = args[5];
 
+        MDC.put("locationId", ObjectUtils.isEmpty(locale) ? "000" : locale);
+        LOGGER.info("Starting application");
+
         location = new Location();
         location.setID(Integer.parseInt(locale.trim()));
         location.setSchema(schema);
@@ -165,8 +174,8 @@ public class Main {
 
         try {
             location.setInvoiceDate(mdyFormat.parse(date));
-        } catch (ParseException e) {
-            e.printStackTrace();
+        } catch (ParseException exception) {
+            LOGGER.error("Exception in main()", exception);
         }
 
         location.setFrequency(frequency);
@@ -180,8 +189,8 @@ public class Main {
             DriverManager.registerDriver(new com.ibm.as400.access.AS400JDBCDriver());
             connection = DriverManager.getConnection(location.getHostURL(), location.getUser(), location.getPassword());
             setDocument();
-        } catch (SQLException e1) {
-            e1.printStackTrace();
+        } catch (Exception exception) {
+            exception.printStackTrace();
         } finally {
             try {
                 resultSetBilling.close();
@@ -191,8 +200,8 @@ public class Main {
                 resultSetItem.close();
                 statementItem.close();
                 connection.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            } catch (Exception ignore) {
+               //ignore;
             }
         }
     }
@@ -218,8 +227,8 @@ public class Main {
                             + String.format("%03d", resultSetBilling.getInt("BIL#"))
                             + "_"
                             + isoFormat.format(mdyFormat.parse(date));
-                } catch (ParseException e) {
-                    throw new RuntimeException(e);
+                } catch (ParseException exception) {
+                    LOGGER.error("Exception in Main.setDocument()", exception);
                 }
 
                 if (resultSetBilling.getString("BILSNDEML").equals("W")) {
@@ -251,8 +260,8 @@ public class Main {
                     e.printStackTrace();
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException exception) {
+            LOGGER.error("Exception in Main.setDocument()", exception);
         }
     }
 
@@ -272,8 +281,8 @@ public class Main {
             centralBill.setRemitID(resultSetBilling.getInt("BILHDGCD"));
             centralBill.setDiscountRate(resultSetBilling.getDouble("BILDISCNT"));
             centralBill.setStatus(resultSetBilling.getString("BILSTATUS"));
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException exception) {
+            LOGGER.error("Exception in Main.setBilling()", exception);
         }
     }
 
@@ -294,8 +303,8 @@ public class Main {
                 remit.setPhone(resultSetRemit.getLong("HDGPHONERE"));
                 remit.setFax(resultSetRemit.getLong("HDGFAX#1"));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException exception) {
+            LOGGER.error("Exception in Main.setRemit()", exception);
         }
     }
 
@@ -320,8 +329,8 @@ public class Main {
                 try {
                     invoice.setDeliveryDate(resultSetInvoice.getDate("DELIVER_DATE"));
                     invoice.setInvoiceDate(mdyFormat.parse(date));
-                } catch (ParseException e) {
-                    e.printStackTrace();
+                } catch (ParseException exception) {
+                    LOGGER.error("Exception in Main.setInvoice()", exception);
                 }
 
                 invoice.setID(resultSetInvoice.getInt("INVOICE_NUMBER"));
@@ -351,8 +360,8 @@ public class Main {
 
                 document.addInvoice(invoice, frequency);
             }
-        } catch (SQLException e1) {
-            e1.printStackTrace();
+        } catch (SQLException exception) {
+            LOGGER.error("Exception in Main.setInvoice()", exception);
         }
     }
 
@@ -380,8 +389,8 @@ public class Main {
                 customer.setStatus(resultSetCustomer.getString("CUSSTATUS"));
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException exception) {
+            LOGGER.error("Exception in Main.setCustomer()", exception);
         }
     }
 
@@ -399,8 +408,8 @@ public class Main {
                 terms.setType(resultSetTerms.getString("TRMWM"));
                 terms.setDueByDate(resultSetInvoice.getDate("DELIVER_DATE"));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException exception) {
+            LOGGER.error("Exception in Main.setTerms()", exception);
         }
     }
 
@@ -418,8 +427,8 @@ public class Main {
                 salesperson.setEmailAddress(resultSetSalesperson.getString("SLMEMAIL"));
                 salesperson.setStatus(resultSetSalesperson.getString("SLMSTATUS"));
             }
-        } catch (SQLException e) {
-            e.printStackTrace(System.err);
+        } catch (SQLException exception) {
+            LOGGER.error("Exception in Main.setSalesperson()", exception);
         }
     }
 
@@ -437,8 +446,8 @@ public class Main {
             if (resultSetPurchaseOrder.next()) {
                 purchaseOrder.setContract(resultSetPurchaseOrder.getString("ipoPO#"));
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException exception) {
+            LOGGER.error("Exception in Main.setPurchaseOrder()", exception);
         }
     }
 
@@ -506,7 +515,7 @@ public class Main {
 
         try {
             email.setSubject("[" + String.format("%03d", invoice.getBilling().getID()) + "] - " + location.getTextFrequency().trim() + " Invoices for " + usaFormat.format(mdyFormat.parse(date)));
-        } catch (ParseException e) {
+        } catch (ParseException ignore) {
             email.setSubject(location.getTextFrequency().trim() + " Invoices for " + date);
         }
 
@@ -523,7 +532,7 @@ public class Main {
                     + remit.getAddress_Formatted()
                     + "<br>"
                     + remit.getPhone_Formatted());
-        } catch (ParseException e) {
+        } catch (ParseException ignore) {
             email.setBody("<p>Attached are your <b>"
                     + location.getTextFrequency().trim()
                     + "</b> invoices for <b>"
@@ -569,8 +578,8 @@ public class Main {
 
         try {
             FileUtils.cleanDirectory(directorySent);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException exception) {
+            LOGGER.error("Exception in Main.maintainDirectory()", exception);
         }
     }
 }

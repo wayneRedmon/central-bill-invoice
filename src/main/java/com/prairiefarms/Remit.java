@@ -93,7 +93,7 @@ public class Remit {
             }
 
             addressFormatted = addressFormatted.trim() + "  " + zip.trim();
-        } catch (IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException ignore) {
             addressFormatted = addressFormatted.trim() + "  " + postalCode.trim();
         }
 

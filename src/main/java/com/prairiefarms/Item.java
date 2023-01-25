@@ -1,17 +1,7 @@
 package com.prairiefarms;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 public class Item {
 
-    private static final String sql = "SELECT * FROM ds_PRD WHERE prd# = ? FETCH FIRST ROW ONLY";
-
-    private Connection connection;
-    private static PreparedStatement preparedStatement;
-    private static ResultSet resultset;
     private int id;
     private String description;
     private String salesType;
@@ -29,39 +19,6 @@ public class Item {
     private double glAmount;
     private String status;
 
-
-    public Connection getConnection() {
-        return connection;
-    }
-
-    public void setConnection(Connection connection) {
-        this.connection = connection;
-    }
-
-    public void initDB(int productID) {
-        try {
-            preparedStatement = connection.prepareStatement(sql);
-            preparedStatement.setInt(1, productID);
-
-            resultset = preparedStatement.executeQuery();
-
-            if (resultset.next()) {
-                id = resultset.getInt("PRD#");
-                description = resultset.getString("PRDDESC");
-                upcCode = resultset.getInt("PRDUPCCD");
-                unitsPerCase = resultset.getInt("PRDUNTSCSE");
-            }
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        } finally {
-            try {
-                resultset.close();
-                preparedStatement.close();
-            } catch (SQLException ignore) {
-                //ignore;
-            }
-        }
-    }
 
     public int getID() {
         return id;

@@ -100,7 +100,7 @@ public class CentralBill {
             address = city.trim() + ", " +
                     stateProvince.trim() + "  " +
                     zip.trim();
-        } catch (IndexOutOfBoundsException exception) {
+        } catch (IndexOutOfBoundsException ignore) {
             address = "";
         }
 
@@ -118,7 +118,7 @@ public class CentralBill {
             phoneFormatted = "(" + phone.substring(0, 3) + ") " +
                     phone.substring(3, 6) + "-" +
                     phone.substring(6, 10);
-        } catch (IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException ignore) {
             phoneFormatted = "";
         }
 
@@ -140,7 +140,7 @@ public class CentralBill {
             faxFormatted = "(" + fax.substring(0, 3) + ") " +
                     fax.substring(3, 6) + "-" +
                     fax.substring(6, 10);
-        } catch (IndexOutOfBoundsException e) {
+        } catch (IndexOutOfBoundsException ignore) {
             faxFormatted = "";
         }
 
@@ -202,5 +202,4 @@ public class CentralBill {
     public void setStatus(String status) {
         this.status = status;
     }
-
 }

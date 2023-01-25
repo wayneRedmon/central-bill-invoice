@@ -1,5 +1,8 @@
 package com.prairiefarms;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
@@ -12,6 +15,8 @@ import java.util.Date;
 import java.util.Properties;
 
 public class Email {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(CentralBill.class);
 
 	private String recipient;
 	private String carbonCopy;
@@ -133,7 +138,7 @@ public class Email {
 
 			Transport.send(message);
 		} catch (MessagingException exception) {
-			exception.printStackTrace();
+			LOGGER.error("Email.send()", exception);
 		}
 	}
 }

@@ -3,6 +3,8 @@ package com.prairiefarms;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.CharacterDataArea;
 import com.ibm.as400.access.QSYSObjectPathName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -13,6 +15,7 @@ import java.util.Scanner;
 
 public class Location {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CentralBill.class);
     private static final SimpleDateFormat usaFormat = new SimpleDateFormat("MM/dd/yyyy");
     private static final SimpleDateFormat isoFormat = new SimpleDateFormat("yyyyMMdd");
 
@@ -212,7 +215,7 @@ public class Location {
 
             hostURL = "jdbc:as400://127.0.0.1/" + schema.trim() + ";naming=system;errors=full;socket timeout=30000;thread used=false";
         } catch (Exception exception) {
-            exception.printStackTrace();
+            LOGGER.error("Location.setProperty()", exception);
         }
     }
 
@@ -232,7 +235,7 @@ public class Location {
             emailBoxOutgoing = "mail/" + schema.trim() + "/" + documentType.trim() + "/" + textFrequency.trim() + "/";
             emailBoxSent = "mail/" + schema.trim() + "/" + documentType.trim() + "/" + textFrequency.trim() + "/sent/";
         } catch (Exception exception) {
-            exception.printStackTrace();
+            LOGGER.error("Location.setPath()", exception);
         }
     }
 
