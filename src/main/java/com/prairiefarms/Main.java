@@ -1,7 +1,6 @@
 package com.prairiefarms;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -193,7 +192,6 @@ public class Main {
         String password = args[6];
 
         location = new Location();
-
         location.setID(Integer.parseInt(locale.trim()));
         location.setSchema(schema);
         location.setHostLocal(host);

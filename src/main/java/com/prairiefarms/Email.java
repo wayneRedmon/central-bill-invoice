@@ -19,12 +19,9 @@ public class Email {
 	private String user;
 	private String password;
 	private String mailHost;
-
 	private String subject;
 	private String body;
-
 	private String[] attachment;
-
 	private String disclaimer;
 
 
@@ -95,7 +92,6 @@ public class Email {
 
 	public void send() {
 		Properties props = new Properties();
-
 		props.put("mail.smtp.auth", "true");
 		props.put("mail.smtp.starttls.enable", "true");
 		props.put("mail.smtp.host", mailHost.trim());
@@ -116,23 +112,17 @@ public class Email {
 			message.setSubject(subject.trim());
 
 			Multipart multipart = new MimeMultipart();
-
 			BodyPart messageBodyPart = new MimeBodyPart();
-
 			messageBodyPart.setContent(body.trim() + "<br><br><br>" + disclaimer.trim(), "text/html");
-
 			multipart.addBodyPart(messageBodyPart);
 
 			for (int i = 0; i < attachment.length; i++) {
 				if (attachment[i] != null) {
-					BodyPart attachmentBodyPart = new MimeBodyPart();
-
 					DataSource source = new FileDataSource(attachment[i].trim());
 
+					BodyPart attachmentBodyPart = new MimeBodyPart();
 					attachmentBodyPart.setDataHandler(new DataHandler(source));
-
 					attachmentBodyPart.setFileName(source.getName().trim());
-
 			        multipart.addBodyPart(attachmentBodyPart);
 				}
 			}
@@ -142,10 +132,8 @@ public class Email {
 			message.setSentDate(new Date());
 
 			Transport.send(message);
-
-		} catch (MessagingException e) {
-			System.out.println(e);
+		} catch (MessagingException exception) {
+			exception.printStackTrace();
 		}
 	}
-
 }

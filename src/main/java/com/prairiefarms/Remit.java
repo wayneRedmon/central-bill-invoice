@@ -1,8 +1,5 @@
 package com.prairiefarms;
 
-
-import org.apache.commons.lang3.StringUtils;
-
 import java.text.DecimalFormat;
 
 public class Remit {
@@ -85,9 +82,7 @@ public class Remit {
     }
 
     public String getAddress_Formatted() {
-        String addressFormatted = city.trim() + ", " +
-                stateProvince.trim();
-
+        String addressFormatted = city.trim() + ", " + stateProvince.trim();
         String zip = "";
 
         try {
@@ -98,7 +93,6 @@ public class Remit {
             }
 
             addressFormatted = addressFormatted.trim() + "  " + zip.trim();
-
         } catch (IndexOutOfBoundsException e) {
             addressFormatted = addressFormatted.trim() + "  " + postalCode.trim();
         }
@@ -111,11 +105,11 @@ public class Remit {
     }
 
     public String getPhone_Formatted() {
-        DecimalFormat decimalFormat = new DecimalFormat("0000000000");
-        String phoneText = decimalFormat.format(phone);
-        return "(" + phoneText.substring(0, 3) + ") " +
-                phoneText.substring(3, 6) + "-" +
-                phoneText.substring(6, 10);
+        final DecimalFormat decimalFormat = new DecimalFormat("0000000000");
+
+        return "(" + decimalFormat.format(phone).substring(0, 3) + ") " +
+                decimalFormat.format(phone).substring(3, 6) + "-" +
+                decimalFormat.format(phone).substring(6, 10);
     }
 
     public void setPhone(Long phone) {
@@ -127,22 +121,12 @@ public class Remit {
     }
 
     public String getFax_Formatted() {
-        String faxFormatted = "";
+        final DecimalFormat decimalFormat = new DecimalFormat("0000000000");
 
-        if (fax != 0L) {
-            DecimalFormat decimalFormat = new DecimalFormat("0000000000");
-            String faxText = decimalFormat.format(fax);
-
-            try {
-                faxFormatted = "(" + faxText.substring(0, 3) + ") " +
-                        faxText.substring(3, 6) + "-" +
-                        faxText.substring(6, 10);
-            } catch (IndexOutOfBoundsException e) {
-                faxFormatted = "(" + faxText.trim() + ")";
-            }
-        }
-
-        return faxFormatted;
+        return fax == 0L ? "" :
+                "(" + decimalFormat.format(fax).substring(0, 3) + ") " +
+                        decimalFormat.format(fax).substring(3, 6) + "-" +
+                        decimalFormat.format(fax).substring(6, 10);
     }
 
     public void setFax(Long fax) {
@@ -156,5 +140,4 @@ public class Remit {
     public void setStatus(String status) {
         this.status = status;
     }
-
 }
