@@ -187,14 +187,12 @@ public class Main {
         locale = args[1];
         frequency = args[2];
         date = args[3];
-        String host = args[4];
-        String username = args[5];
-        String password = args[6];
+        String username = args[4];
+        String password = args[5];
 
         location = new Location();
         location.setID(Integer.parseInt(locale.trim()));
         location.setSchema(schema);
-        location.setHostLocal(host);
         location.setUser(username);
         location.setPassword(password);
 

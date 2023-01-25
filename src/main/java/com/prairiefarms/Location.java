@@ -211,7 +211,7 @@ public class Location {
             xlsPassword = configuration.getProperty("xlsxPassword");
             disclaimer = configuration.getProperty("disclaimer");
 
-            hostURL = "jdbc:as400://" + hostLocal.trim() + "/" + schema.trim() + ";naming=system;errors=full;socket timeout=30000;thread used=false";
+            hostURL = "jdbc:as400://127.0.0.1/" + schema.trim() + ";naming=system;errors=full;socket timeout=30000;thread used=false";
         } catch (Exception exception) {
             exception.printStackTrace();
         }
