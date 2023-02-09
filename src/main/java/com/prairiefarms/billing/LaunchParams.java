@@ -32,8 +32,6 @@ public class LaunchParams {
         boolean success = false;
 
         try {
-            LOGGER.info("");
-
             commandLine = new DefaultParser().parse(CLI_OPTIONS, args);
 
             if (ObjectUtils.isNotEmpty(commandLine)) {
