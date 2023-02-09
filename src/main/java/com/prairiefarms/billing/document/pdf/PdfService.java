@@ -12,6 +12,7 @@ import com.prairiefarms.billing.document.pdf.pages.RemittancePage;
 import com.prairiefarms.billing.invoice.Invoice;
 import com.prairiefarms.billing.invoice.centralBill.CentralBillInvoice;
 import com.prairiefarms.billing.invoice.centralBill.customer.CustomerInvoice;
+import com.prairiefarms.billing.invoice.item.Item;
 import com.prairiefarms.billing.invoice.item.ItemSummary;
 import com.prairiefarms.billing.utils.FolderMaintenance;
 import com.prairiefarms.utils.email.Email;
@@ -28,29 +29,74 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class PdfService {
+public class PdfService implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("siftingAppender");
 
     private final CentralBillInvoice centralBillInvoice;
-    private final List<ItemSummary> itemSummaries;
 
     private String documentName;
+    private List<ItemSummary> itemSummaries;
 
-    public PdfService(CentralBillInvoice centralBillInvoice, List<ItemSummary> itemSummaries) throws IOException {
+    public PdfService(CentralBillInvoice centralBillInvoice) throws IOException {
         this.centralBillInvoice = centralBillInvoice;
-        this.itemSummaries = itemSummaries;
 
         PdfEnvironment.getInstance().init();
     }
 
-    public void generateDocument() {
+    @Override
+    public void run() {
+        System.out.println(" starting thread for " + Thread.currentThread().getName() + " = " + centralBillInvoice.getCentralBill().getContact().getId() + " " + centralBillInvoice.getCentralBill().getContact().getName());
+
         try {
+            this.setItemSummary();
             this.createDocument();
             this.emailDocument();
             this.archiveDocument();
         } catch (Exception exception) {
-            LOGGER.error("Exception in PdfService.generateDocument()", exception);
+            LOGGER.error("Exception in PdfService.run()", exception);
+        }
+    }
+
+    private void setItemSummary() {
+        itemSummaries = new ArrayList<>();
+
+        for (CustomerInvoice customerInvoice : centralBillInvoice.getCustomerInvoices()) {
+            for (Invoice invoice : customerInvoice.getInvoices()) {
+                for (Item item : invoice.getItems()) {
+                    boolean found = false;
+
+                    for (ItemSummary itemSummary : itemSummaries) {
+                        if (itemSummary.getSalesType().equals(item.getSalesType()) &&
+                                itemSummary.getId() == item.getId() &&
+                                itemSummary.getPriceEach() == item.getPriceEach()) {
+                            itemSummary.setQuantity(item.getQuantity());
+
+                            itemSummary.setExtension(item.getExtension());
+
+                            found = true;
+
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        itemSummaries.add(
+                                new ItemSummary(
+                                        item.getSalesType(),
+                                        item.getId(),
+                                        item.getPriceEach(),
+                                        item.getName(),
+                                        item.getSize(),
+                                        item.getType(),
+                                        item.getLabel(),
+                                        item.getQuantity(),
+                                        item.getExtension()
+                                )
+                        );
+                    }
+                }
+            }
         }
     }
 
