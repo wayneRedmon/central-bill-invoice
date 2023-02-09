@@ -11,7 +11,6 @@ import com.prairiefarms.billing.invoice.Invoice;
 import com.prairiefarms.billing.invoice.centralBill.CentralBillInvoice;
 import com.prairiefarms.billing.invoice.centralBill.customer.CustomerInvoice;
 import com.prairiefarms.billing.invoice.item.Item;
-import com.prairiefarms.billing.invoice.item.ItemSummary;
 import com.prairiefarms.billing.sale.SaleDAO;
 import com.prairiefarms.utils.database.HostConnection;
 import org.apache.commons.lang3.ObjectUtils;
@@ -19,30 +18,38 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class BillingService {
 
     private List<CentralBillInvoice> centralBillInvoices;
-    private List<ItemSummary> itemSummaries;
 
     public BillingService() {
     }
 
     public void init() throws Exception {
-        setCentralBillInvoices();
+        getCentralBillInvoices();
 
         if (ObjectUtils.isNotEmpty(centralBillInvoices)) {
-            setItemSummary();
+            ExecutorService executorService = Executors.newFixedThreadPool(centralBillInvoices.size());
 
             for (CentralBillInvoice centralBillInvoice : centralBillInvoices) {
                 if (centralBillInvoice.getCentralBill().getDocumentType().fileExtension.equals(".pdf")) {
-                    new PdfService(centralBillInvoice, itemSummaries).generateDocument();
+                    Runnable runnableWorker = new PdfService(centralBillInvoice);
+                    executorService.execute(runnableWorker);
                 }
+            }
+
+            executorService.shutdown();
+
+            while (!executorService.isTerminated()) {
+                //ignore;
             }
         }
     }
 
-    private void setCentralBillInvoices() throws SQLException {
+    private void getCentralBillInvoices() throws SQLException {
         centralBillInvoices = new ArrayList<>();
 
         try (HostConnection hostConnection =
@@ -54,10 +61,10 @@ public class BillingService {
             final CentralBillDAO centralBillDAO = new CentralBillDAO(hostConnection.get());
             final CustomerDAO customerDAO = new CustomerDAO(hostConnection.get());
             final OpenDAO openDAO = new OpenDAO(hostConnection.get());
-
             final List<Integer> centralBIlls = saleDAO.centralBillIdList();
 
             centralBillInvoices = new ArrayList<>();
+
             for (Integer centralBillId : centralBIlls) {
                 CentralBill centralBill = centralBillDAO.get(centralBillId);
 
@@ -92,63 +99,14 @@ public class BillingService {
                         }
                     }
 
-                    if (ObjectUtils.isNotEmpty(invoices))
-                        customerInvoices.add(
-                                new CustomerInvoice(customer, invoices)
-                        );
-                }
-
-                if (ObjectUtils.isNotEmpty(customerInvoices))
-                    centralBillInvoices.add(
-                            new CentralBillInvoice(
-                                    centralBill,
-                                    customerInvoices
-                            )
+                    if (ObjectUtils.isNotEmpty(invoices)) customerInvoices.add(
+                            new CustomerInvoice(customer, invoices)
                     );
-            }
-        }
-    }
-
-    private void setItemSummary() {
-        itemSummaries = new ArrayList<>();
-
-        for (CentralBillInvoice centralBillInvoice : centralBillInvoices) {
-            for (CustomerInvoice customerInvoice : centralBillInvoice.getCustomerInvoices()) {
-                for (Invoice invoice : customerInvoice.getInvoices()) {
-                    for (Item item : invoice.getItems()) {
-                        boolean found = false;
-
-                        for (ItemSummary itemSummary : itemSummaries) {
-                            if (itemSummary.getSalesType().equals(item.getSalesType()) &&
-                                    itemSummary.getId() == item.getId() &&
-                                    itemSummary.getPriceEach() == item.getPriceEach()) {
-                                itemSummary.setQuantity(item.getQuantity());
-
-                                itemSummary.setExtension(item.getExtension());
-
-                                found = true;
-
-                                break;
-                            }
-                        }
-
-                        if (!found) {
-                            itemSummaries.add(
-                                    new ItemSummary(
-                                            item.getSalesType(),
-                                            item.getId(),
-                                            item.getPriceEach(),
-                                            item.getName(),
-                                            item.getSize(),
-                                            item.getType(),
-                                            item.getLabel(),
-                                            item.getQuantity(),
-                                            item.getExtension()
-                                    )
-                            );
-                        }
-                    }
                 }
+
+                if (ObjectUtils.isNotEmpty(customerInvoices)) centralBillInvoices.add(
+                        new CentralBillInvoice(centralBill, customerInvoices)
+                );
             }
         }
     }
