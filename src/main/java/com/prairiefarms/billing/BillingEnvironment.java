@@ -1,6 +1,5 @@
 package com.prairiefarms.billing;
 
-import com.ibm.as400.access.*;
 import com.prairiefarms.billing.utils.Credentials;
 import com.prairiefarms.billing.utils.Frequency;
 import com.prairiefarms.utils.database.HostConnection;
@@ -10,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -36,7 +36,6 @@ public class BillingEnvironment {
     private static String dairyLogoPath;
     private static Frequency frequency;
     private static LocalDate billingDate;
-    private static AS400 as400server;
     private static String emailServer;
     private static List<String> emailCarbonCopy;
 
@@ -85,10 +84,9 @@ public class BillingEnvironment {
 
         if (StringUtils.isNotBlank(commandLine.getOptionValue("server"))) {
             server = StringUtils.normalizeSpace(commandLine.getOptionValue("server"));
-            as400server = new AS400(server, credentials.getUsername(), credentials.getPassword());
         }
 
-        return StringUtils.isNotBlank(server) && ObjectUtils.isNotEmpty(as400server);
+        return StringUtils.isNotBlank(server);
     }
 
     public String getServer() {
@@ -108,30 +106,36 @@ public class BillingEnvironment {
         return library;
     }
 
-    private static boolean setDairy() throws Exception {
-        final String DATA_AREA = "DSINFO";
+    private static boolean setDairy() throws SQLException, FileNotFoundException {
+        //final String sql = "select subStr(hdgName,1,15) as nameText from ds_Hdg where hdg#=1";
+        final String sql = "select hdgName from ds_Hdg where hdg#=1";
 
-        corporateName = "";
         dairyId = 0;
+        corporateName = "";
         dairyLogoPath = "";
 
         if (StringUtils.isNotBlank(commandLine.getOptionValue("dairy")) && NumberUtils.isDigits(commandLine.getOptionValue("dairy"))) {
-            dairyId = NumberUtils.toInt(commandLine.getOptionValue("dairy"));
+            String dairyHeadingName = "";
 
-            final QSYSObjectPathName path = new QSYSObjectPathName(library.trim(), DATA_AREA, "DTAARA");
-            final CharacterDataArea data = new CharacterDataArea(as400server, path.getPath());
+            try (HostConnection hostConnection = new HostConnection(server, credentials, library)) {
+                try (Statement statement = hostConnection.get().createStatement()) {
+                    try (ResultSet resultSet = statement.executeQuery(sql)) {
+                        if (resultSet.next()) {
+                            dairyHeadingName = resultSet.getString("hdgName");
+                        }
+                    }
+                }
+            }
 
-            corporateName = data.read().substring(12, 37);
-
-            if (StringUtils.isNotBlank(corporateName)) {
+            if (StringUtils.isNotBlank(dairyHeadingName)) {
                 Scanner scanner = new Scanner(new File(PATH_TO_DAIRY_BUSINESS_FILE));
 
                 while (scanner.hasNextLine()) {
-                    String comparisonText = scanner.nextLine();
+                    String[] stringArray = scanner.nextLine().split("\",\"");
 
-                    if (comparisonText.toLowerCase(Locale.ROOT).contains(corporateName.toLowerCase(Locale.ROOT))) {
-                        String[] stringArray = comparisonText.split("\",\"");
-
+                    if (StringUtils.normalizeSpace(dairyHeadingName.toLowerCase(Locale.ROOT)).contains(StringUtils.normalizeSpace(stringArray[2].replace("\"", "").toLowerCase(Locale.ROOT)))) {
+                        dairyId = NumberUtils.toInt(commandLine.getOptionValue("dairy"));
+                        corporateName = stringArray[0].replace("\"", "");
                         dairyLogoPath = stringArray[1].replace("\"", "");
 
                         break;
