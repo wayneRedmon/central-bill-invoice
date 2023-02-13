@@ -14,14 +14,19 @@ import com.prairiefarms.billing.invoice.item.Item;
 import com.prairiefarms.billing.sale.SaleDAO;
 import com.prairiefarms.utils.database.HostConnection;
 import org.apache.commons.lang3.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Set;
+import java.util.concurrent.*;
 
 public class BillingService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BillingService.class);
 
     private List<CentralBillInvoice> centralBillInvoices;
 
@@ -29,29 +34,16 @@ public class BillingService {
     }
 
     public void init() throws Exception {
+        centralBillInvoices = new ArrayList<>();
+
         getCentralBillInvoices();
 
         if (ObjectUtils.isNotEmpty(centralBillInvoices)) {
-            ExecutorService executorService = Executors.newFixedThreadPool(centralBillInvoices.size());
-
-            for (CentralBillInvoice centralBillInvoice : centralBillInvoices) {
-                if (centralBillInvoice.getCentralBill().getDocumentType().fileExtension.equals(".pdf")) {
-                    Runnable runnableWorker = new PdfService(centralBillInvoice);
-                    executorService.execute(runnableWorker);
-                }
-            }
-
-            executorService.shutdown();
-
-            while (!executorService.isTerminated()) {
-                //ignore;
-            }
+            this.executeThreads();
         }
     }
 
     private void getCentralBillInvoices() throws SQLException {
-        centralBillInvoices = new ArrayList<>();
-
         try (HostConnection hostConnection =
                      new HostConnection(
                              BillingEnvironment.getInstance().getServer(),
@@ -99,15 +91,39 @@ public class BillingService {
                         }
                     }
 
-                    if (ObjectUtils.isNotEmpty(invoices)) customerInvoices.add(
+                    if (ObjectUtils.isNotEmpty(invoices))
+                        customerInvoices.add(
                             new CustomerInvoice(customer, invoices)
                     );
                 }
 
-                if (ObjectUtils.isNotEmpty(customerInvoices)) centralBillInvoices.add(
+                if (ObjectUtils.isNotEmpty(customerInvoices))
+                    centralBillInvoices.add(
                         new CentralBillInvoice(centralBill, customerInvoices)
                 );
             }
+        }
+    }
+
+    private void executeThreads() throws InterruptedException, ExecutionException {
+        Set<Callable<String>> callables = new HashSet<>();
+
+        for (CentralBillInvoice centralBillInvoice : centralBillInvoices) {
+            if (".pdf".equals(centralBillInvoice.getCentralBill().getDocumentType().fileExtension)) {
+                callables.add(new PdfService(centralBillInvoice));
+            }
+        }
+
+        if (ObjectUtils.isNotEmpty(callables)) {
+            ExecutorService executorService = Executors.newFixedThreadPool(callables.size());
+
+            List<Future<String>> futures = executorService.invokeAll(callables);
+
+            for (Future<String> future : futures) {
+                LOGGER.info(future.get());
+            }
+
+            executorService.shutdown();
         }
     }
 }

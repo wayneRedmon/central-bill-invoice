@@ -70,7 +70,10 @@ public class BillingEnvironment {
         credentials = null;
 
         if (StringUtils.isNotBlank(commandLine.getOptionValue("username")) && StringUtils.isNotBlank(commandLine.getOptionValue("password")))
-            credentials = new Credentials(StringUtils.normalizeSpace(commandLine.getOptionValue("username")), StringUtils.normalizeSpace(commandLine.getOptionValue("password")));
+            credentials = new Credentials(
+                    StringUtils.normalizeSpace(commandLine.getOptionValue("username")),
+                    StringUtils.normalizeSpace(commandLine.getOptionValue("password"))
+            );
 
         return ObjectUtils.isNotEmpty(credentials);
     }
@@ -107,7 +110,6 @@ public class BillingEnvironment {
     }
 
     private static boolean setDairy() throws SQLException, FileNotFoundException {
-        //final String sql = "select subStr(hdgName,1,15) as nameText from ds_Hdg where hdg#=1";
         final String sql = "select hdgName from ds_Hdg where hdg#=1";
 
         dairyId = 0;
@@ -133,7 +135,8 @@ public class BillingEnvironment {
                 while (scanner.hasNextLine()) {
                     String[] stringArray = scanner.nextLine().split("\",\"");
 
-                    if (StringUtils.normalizeSpace(dairyHeadingName.toLowerCase(Locale.ROOT)).contains(StringUtils.normalizeSpace(stringArray[2].replace("\"", "").toLowerCase(Locale.ROOT)))) {
+                    if (StringUtils.normalizeSpace(dairyHeadingName.toLowerCase(Locale.ROOT))
+                            .contains(StringUtils.normalizeSpace(stringArray[2].replace("\"", "").toLowerCase(Locale.ROOT)))) {
                         dairyId = NumberUtils.toInt(commandLine.getOptionValue("dairy"));
                         corporateName = stringArray[0].replace("\"", "");
                         dairyLogoPath = stringArray[1].replace("\"", "");
@@ -170,8 +173,8 @@ public class BillingEnvironment {
         return ObjectUtils.isNotEmpty(frequency);
     }
 
-    public Frequency getFrequency() {
-        return frequency;
+    public String frequencyAsText() {
+        return frequency.type;
     }
 
     private static boolean setBillingDate() {
@@ -183,11 +186,15 @@ public class BillingEnvironment {
         return ObjectUtils.isNotEmpty(billingDate);
     }
 
-    public LocalDate getBillingDate() {
-        return billingDate;
+    public String billingDateAsUSA() {
+        return billingDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
     }
 
-    static boolean setEmailServer() throws IOException {
+    public String billingDateAsYYMMD() {
+        return billingDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    }
+
+    private static boolean setEmailServer() throws IOException {
         emailServer = "";
 
         try (InputStream inputStream = Files.newInputStream(Paths.get(APPLICATION_PROPERTIES))) {
@@ -235,5 +242,12 @@ public class BillingEnvironment {
 
     public String emailSentBox() {
         return "mail/" + library + "/" + BILLING_TYPE + "/" + frequency.type + "/sent/";
+    }
+
+    public int getPageCount(int linesPerPage, int lines) {
+        linesPerPage = linesPerPage <= 0 ? 1 : linesPerPage;
+        lines = lines <= 0 ? 1 : lines;
+
+        return lines % linesPerPage != 0 ? lines / linesPerPage + 1 : lines / linesPerPage;
     }
 }

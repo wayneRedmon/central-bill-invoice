@@ -6,7 +6,7 @@ import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
 import java.io.File;
 
 @NoAutoStart
-public class StartupSizeTimeBasedTriggeringPolicy<E> extends SizeAndTimeBasedFNATP<E> {
+ class StartupSizeTimeBasedTriggeringPolicy<E> extends SizeAndTimeBasedFNATP<E> {
 
     private boolean started = false;
 

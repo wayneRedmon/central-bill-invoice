@@ -3,13 +3,9 @@ package com.prairiefarms.billing;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 public class LaunchParams {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger("siftingAppender");
 
     private static final Options CLI_OPTIONS = new Options()
             .addRequiredOption(null, "username", true, "jdbc username")
@@ -24,34 +20,37 @@ public class LaunchParams {
 
     private CommandLine commandLine;
 
+    private StringBuilder cliOptions;
+
     public LaunchParams(String[] args) {
         this.args = args;
     }
 
-    public boolean init() {
+    public boolean init() throws ParseException {
         boolean success = false;
 
-        try {
-            commandLine = new DefaultParser().parse(CLI_OPTIONS, args);
+        commandLine = new DefaultParser().parse(CLI_OPTIONS, args);
 
-            if (ObjectUtils.isNotEmpty(commandLine)) {
-                MDC.put("dairyId", commandLine.getOptionValue("dairy"));
+        if (ObjectUtils.isNotEmpty(commandLine)) {
+            MDC.put("dairyId", commandLine.getOptionValue("dairy"));
 
-                StringBuilder cliOptions = new StringBuilder()
-                        .append("\r\nCentral Bill RemitToCanvas started with the following CLI options:" + "\r\n")
-                        .append(StringUtils.repeat("=", 125)).append("\r\n");
+            cliOptions = new StringBuilder()
+                    .append("\r\nCentral Bill RemitToTable started with the following CLI options:")
+                    .append("\r\n")
+                    .append(StringUtils.repeat("=", 125))
+                    .append("\r\n");
 
-                for (Option option : commandLine.getOptions())
-                    cliOptions.append("-").append(option.getLongOpt()).append(" ").append(option.getLongOpt().equalsIgnoreCase("password") ? "<********> " : option.getValue() + " ");
+            for (Option option : commandLine.getOptions())
+                cliOptions.append("-")
+                        .append(option.getLongOpt())
+                        .append(" ")
+                        .append(option.getLongOpt().equalsIgnoreCase("password") ? "<********> " : option.getValue() + " ");
 
-                cliOptions.append("\r\n").append(StringUtils.repeat("-", 125)).append("\r\n");
+            cliOptions.append("\r\n")
+                    .append(StringUtils.repeat("-", 125))
+                    .append("\r\n");
 
-                success = true;
-
-                LOGGER.info(cliOptions.toString());
-            }
-        } catch(Exception exception) {
-            LOGGER.error("Exception in LaunchParameters.init()", exception);
+            success = true;
         }
 
         return success;
@@ -59,5 +58,9 @@ public class LaunchParams {
 
     public CommandLine getCommandLine() {
         return commandLine;
+    }
+
+    public String getCLIOptions() {
+        return cliOptions.toString();
     }
 }

@@ -6,23 +6,27 @@ import org.slf4j.LoggerFactory;
 
 public class Billing {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("siftingAppender");
+    private static final Logger LOGGER = LoggerFactory.getLogger(Billing.class);
 
     public static void main(String[] args) {
+        LOGGER.info("");  //prime the logger
+
         final LaunchParams launchParams = new LaunchParams(args);
 
-        if (launchParams.init()) {
-            try {
+        try {
+            if (launchParams.init()) {
+                LOGGER.info(launchParams.getCLIOptions());
+
                 if (BillingEnvironment.getInstance().init(launchParams.getCommandLine())) {
-                    new FolderMaintenance().clean();
+                    FolderMaintenance.clean();
 
                     final BillingService billingService = new BillingService();
 
                     billingService.init();
                 }
-            } catch (Exception exception) {
-                LOGGER.error("Exception in Billing.main()", exception);
             }
+        } catch (Exception exception) {
+            LOGGER.error("Exception in Billing.main()", exception);
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.prairiefarms.billing.document.pdf.pages.canvases;
+package com.prairiefarms.billing.document.pdf.pages.tables;
 
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.layout.borders.Border;
@@ -8,16 +8,15 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.prairiefarms.billing.BillingEnvironment;
-import com.prairiefarms.billing.document.pdf.PdfEnvironment;
 import com.prairiefarms.billing.document.pdf.utils.Color;
 import com.prairiefarms.billing.document.pdf.utils.FontSize;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.time.format.DateTimeFormatter;
+import java.io.IOException;
 import java.util.Locale;
 
-public class SubjectCanvas {
+public class SubjectTable {
 
     public static final Rectangle INVOICE_SUBJECT_RECTANGLE = new Rectangle(440f, 656f, 165f, 100f);
 
@@ -29,7 +28,7 @@ public class SubjectCanvas {
     private final int billToId;
     private final int shipToId;
 
-    public SubjectCanvas(String title, int page, int pages,int billToId, int shipToId) {
+    public SubjectTable(String title, int page, int pages, int billToId, int shipToId) {
         this.title = title;
         this.page = page;
         this.pages = pages;
@@ -37,22 +36,22 @@ public class SubjectCanvas {
         this.shipToId = shipToId;
     }
 
-    public Table table() {
+    public Table detail() throws IOException {
         return new Table(UnitValue.createPercentArray(TABLE_COLUMNS))
                 .setWidth(UnitValue.createPercentValue(100))
                 .setFixedLayout()
                 .addCell(new Cell(1, 4)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontBold())
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
+                        .setFont(TableBase.getFontBold())
                         .setFontSize(FontSize.SMALL.asFloat)
                         .setTextAlignment(TextAlignment.LEFT)
                         .add(new Paragraph(StringUtils.normalizeSpace(title).toUpperCase(Locale.ROOT)))
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontDefault())
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
+                        .setFont(TableBase.getFontDefault())
                         .setFontSize(FontSize.LABEL.asFloat)
                         .setTextAlignment(TextAlignment.RIGHT)
                         .setBackgroundColor(Color.BLUE.asDeviceRgb())
@@ -60,19 +59,19 @@ public class SubjectCanvas {
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
                         .setBackgroundColor(Color.BLUE.asDeviceRgb())
                         .add(new Paragraph())
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
                         .add(new Paragraph())
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontBold())
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
+                        .setFont(TableBase.getFontBold())
                         .setFontSize(FontSize.SMALL.asFloat)
                         .setTextAlignment(TextAlignment.LEFT)
                         .add(new Paragraph(
@@ -84,8 +83,8 @@ public class SubjectCanvas {
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontDefault())
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
+                        .setFont(TableBase.getFontDefault())
                         .setFontSize(FontSize.LABEL.asFloat)
                         .setTextAlignment(TextAlignment.RIGHT)
                         .setBackgroundColor(Color.BLUE.asDeviceRgb())
@@ -93,27 +92,27 @@ public class SubjectCanvas {
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
                         .setBackgroundColor(Color.BLUE.asDeviceRgb())
                         .add(new Paragraph())
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
                         .add(new Paragraph())
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontBold())
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
+                        .setFont(TableBase.getFontBold())
                         .setFontSize(FontSize.SMALL.asFloat)
                         .setTextAlignment(TextAlignment.LEFT)
-                        .add(new Paragraph(BillingEnvironment.getInstance().getBillingDate().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))))
+                        .add(new Paragraph(BillingEnvironment.getInstance().billingDateAsUSA()))
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontDefault())
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
+                        .setFont(TableBase.getFontDefault())
                         .setFontSize(FontSize.LABEL.asFloat)
                         .setTextAlignment(TextAlignment.RIGHT)
                         .setBackgroundColor(Color.BLUE.asDeviceRgb())
@@ -121,19 +120,19 @@ public class SubjectCanvas {
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
                         .setBackgroundColor(Color.BLUE.asDeviceRgb())
                         .add(new Paragraph())
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
                         .add(new Paragraph())
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontBold())
+                        .setPadding(TableBase.DEFAULT_CELL_PADDING)
+                        .setFont(TableBase.getFontBold())
                         .setFontSize(FontSize.SMALL.asFloat)
                         .setTextAlignment(TextAlignment.LEFT)
                         .add(new Paragraph(page + " of " + pages))
