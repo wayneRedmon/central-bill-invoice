@@ -1,6 +1,6 @@
 package com.prairiefarms.billing.centralBill;
 
-import com.prairiefarms.billing.BillingEnvironment;
+import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.remit.Remit;
 import com.prairiefarms.billing.utils.Contact;
 import com.prairiefarms.billing.utils.DocumentType;
@@ -59,7 +59,7 @@ public class CentralBillDAO {
                                         resultSet.getString("remitState"),
                                         resultSet.getInt("remitZip"),
                                         resultSet.getLong("remitPhone"),
-                                        BillingEnvironment.getInstance().emailCarbonCopy()
+                                        Environment.getInstance().emailCarbonCopy()
                                 )
                         ),
                         DocumentType.getEnumByString(resultSet.getString("bilSndEml"))

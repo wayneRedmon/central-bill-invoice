@@ -12,6 +12,7 @@ import com.prairiefarms.billing.invoice.centralBill.CentralBillInvoice;
 import com.prairiefarms.billing.invoice.centralBill.customer.CustomerInvoice;
 import com.prairiefarms.billing.invoice.item.Item;
 import com.prairiefarms.billing.sale.SaleDAO;
+import com.prairiefarms.billing.utils.DocumentType;
 import com.prairiefarms.billing.utils.FolderMaintenance;
 import com.prairiefarms.utils.database.HostConnection;
 import org.apache.commons.lang3.ObjectUtils;
@@ -25,17 +26,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
-public class BillingService {
+public class Service {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BillingService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Service.class);
 
     private List<CentralBillInvoice> centralBillInvoices;
 
-    public BillingService() {
+    public Service() {
     }
 
     public void init() throws Exception {
-        FolderMaintenance.clean(BillingEnvironment.getInstance().emailSentBox(), 7);
+        FolderMaintenance.clean(Environment.getInstance().emailSentBox(), 7);
 
         centralBillInvoices = new ArrayList<>();
 
@@ -46,34 +47,29 @@ public class BillingService {
     }
 
     private void getCentralBillInvoices() throws SQLException {
+        centralBillInvoices = new ArrayList<>();
+
         try (HostConnection hostConnection =
                      new HostConnection(
-                             BillingEnvironment.getInstance().getServer(),
-                             BillingEnvironment.getInstance().getCredentials(),
-                             BillingEnvironment.getInstance().getLibrary())) {
+                             Environment.getInstance().getServer(),
+                             Environment.getInstance().getCredentials(),
+                             Environment.getInstance().getLibrary())) {
             final SaleDAO saleDAO = new SaleDAO(hostConnection.get());
             final CentralBillDAO centralBillDAO = new CentralBillDAO(hostConnection.get());
             final CustomerDAO customerDAO = new CustomerDAO(hostConnection.get());
             final OpenDAO openDAO = new OpenDAO(hostConnection.get());
-            final List<Integer> centralBIlls = saleDAO.centralBillIdList();
 
-            centralBillInvoices = new ArrayList<>();
-
-            for (Integer centralBillId : centralBIlls) {
+            for (Integer centralBillId : saleDAO.centralBillIdList()) {
                 CentralBill centralBill = centralBillDAO.get(centralBillId);
 
                 List<CustomerInvoice> customerInvoices = new ArrayList<>();
 
-                List<Integer> customerIds = saleDAO.customerIdList(centralBillId);
-
-                for (Integer customerId : customerIds) {
+                for (Integer customerId : saleDAO.customerIdList(centralBillId)) {
                     Customer customer = customerDAO.get(customerId);
 
                     List<Invoice> invoices = new ArrayList<>();
 
-                    List<Header> headers = saleDAO.headerList(centralBillId, customerId);
-
-                    for (Header header : headers) {
+                    for (Header header : saleDAO.headerList(centralBillId, customerId)) {
                         List<Item> items = saleDAO.itemList(
                                 centralBillId,
                                 customerId,
@@ -111,8 +107,10 @@ public class BillingService {
         Set<Callable<String>> callables = new HashSet<>();
 
         for (CentralBillInvoice centralBillInvoice : centralBillInvoices) {
-            if (".pdf".equals(centralBillInvoice.getCentralBill().getDocumentType().fileExtension)) {
+            if (DocumentType.S.fileExtension.equals(centralBillInvoice.getCentralBill().getDocumentType().fileExtension)) {
                 callables.add(new PdfService(centralBillInvoice));
+            } else if (DocumentType.W.fileExtension.equals(centralBillInvoice.getCentralBill().getDocumentType().fileExtension)) {
+                //todo: generate xlsx
             }
         }
 

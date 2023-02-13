@@ -5,7 +5,7 @@ import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.Document;
-import com.prairiefarms.billing.BillingEnvironment;
+import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.document.pdf.pages.tables.*;
 import com.prairiefarms.billing.invoice.Invoice;
 import com.prairiefarms.billing.invoice.centralBill.CentralBillInvoice;
@@ -44,7 +44,7 @@ public class RemittancePage {
                 ((centralBillInvoice.getCustomerInvoices().size() * 3) + 1);
         // the above ' * 3' = customer row, invoice header row, and total due row
         // the above ' + 1' = remittance due row
-        pages = BillingEnvironment.getInstance().getPageCount(TABLE_DETAIL_LINES_PER_PAGE, lines);
+        pages = Environment.getInstance().getPageCount(TABLE_DETAIL_LINES_PER_PAGE, lines);
         page = 0;
 
         stampHeader();

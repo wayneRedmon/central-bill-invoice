@@ -1,11 +1,18 @@
 package com.prairiefarms.billing;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 public class LaunchParams {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LaunchParams.class);
 
     private static final Options CLI_OPTIONS = new Options()
             .addRequiredOption(null, "username", true, "jdbc username")
@@ -20,22 +27,27 @@ public class LaunchParams {
 
     private CommandLine commandLine;
 
-    private StringBuilder cliOptions;
-
     public LaunchParams(String[] args) {
         this.args = args;
+        this.setCommandLine();
     }
 
-    public boolean init() throws ParseException {
-        boolean success = false;
+    private void setCommandLine() {
+        try {
+            commandLine = new DefaultParser().parse(CLI_OPTIONS, args);
 
-        commandLine = new DefaultParser().parse(CLI_OPTIONS, args);
-
-        if (ObjectUtils.isNotEmpty(commandLine)) {
             MDC.put("dairyId", commandLine.getOptionValue("dairy"));
 
-            cliOptions = new StringBuilder()
-                    .append("\r\nCentral Bill RemitToTable started with the following CLI options:")
+            this.listOptions();
+        } catch (Exception exception) {
+            LOGGER.error("Exception in LaunchParams.setCommandLine()", exception);
+        }
+    }
+
+    private void listOptions() {
+        if (ObjectUtils.isNotEmpty(commandLine)) {
+            StringBuilder cliOptions = new StringBuilder()
+                    .append("\r\ncentral-billing-invoice started with the following CLI options:")
                     .append("\r\n")
                     .append(StringUtils.repeat("=", 125))
                     .append("\r\n");
@@ -50,17 +62,15 @@ public class LaunchParams {
                     .append(StringUtils.repeat("-", 125))
                     .append("\r\n");
 
-            success = true;
+            LOGGER.info(cliOptions.toString());
         }
-
-        return success;
     }
 
     public CommandLine getCommandLine() {
         return commandLine;
     }
 
-    public String getCLIOptions() {
-        return cliOptions.toString();
+    public boolean isValid() {
+        return ObjectUtils.isNotEmpty(commandLine);
     }
 }

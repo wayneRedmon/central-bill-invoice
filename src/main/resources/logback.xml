@@ -11,13 +11,13 @@
     <property name="LOGS_DIR" value="./logs/"/>
     <property name="LOGS_ARCHIVE_DIR" value="./logs/archive"/>
     <property name="FILE_NAME" value="central-bill-invoice_"/>
-    <appender name="rollingFileAppender" class="ch.qos.logback.classic.sift.SiftingAppender">
+    <appender name="appLogAppender" class="ch.qos.logback.classic.sift.SiftingAppender">
         <discriminator>
             <key>dairyId</key>
-            <defaultValue>000</defaultValue>
+            <defaultValue>unknown</defaultValue>
         </discriminator>
         <sift>
-            <appender name="FILE-${dairyId}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
                 <file>${LOGS_DIR}/${FILE_NAME}${dairyId}.log</file>
                 <encoder>
                     <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
@@ -35,6 +35,6 @@
 
     <root level="INFO">
         <appender-ref ref="console"/>
-        <appender-ref ref="rollingFileAppender"/>
+        <appender-ref ref="appLogAppender"/>
     </root>
 </configuration>

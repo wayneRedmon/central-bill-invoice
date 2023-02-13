@@ -5,7 +5,7 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfDocumentInfo;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
-import com.prairiefarms.billing.BillingEnvironment;
+import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.document.pdf.pages.InvoicePage;
 import com.prairiefarms.billing.document.pdf.pages.ItemSummaryPage;
 import com.prairiefarms.billing.document.pdf.pages.RemittancePage;
@@ -132,14 +132,14 @@ public class PdfService implements Callable<String> {
 
     private void createDocument() throws IOException {
         documentName = "Invoice_" +
-                String.format("%03d", BillingEnvironment.getInstance().getDairyId()) +
+                String.format("%03d", Environment.getInstance().getDairyId()) +
                 "_" +
                 String.format("%03d", centralBillInvoice.getCentralBill().getContact().getId()) +
                 "_" +
-                BillingEnvironment.getInstance().billingDateAsYYMMD() +
+                Environment.getInstance().billingDateAsYYMMD() +
                 StringUtils.normalizeSpace(centralBillInvoice.getCentralBill().getDocumentType().fileExtension);
 
-        try (PdfDocument pdfDocument = new PdfDocument(new PdfWriter(new File(BillingEnvironment.getInstance().emailOutBox() + documentName)))) {
+        try (PdfDocument pdfDocument = new PdfDocument(new PdfWriter(new File(Environment.getInstance().emailOutBox() + documentName)))) {
             PdfDocumentInfo pdfDocumentInfo = pdfDocument.getDocumentInfo();
             pdfDocumentInfo.setTitle("Central Bill Invoice");
             pdfDocumentInfo.setAuthor(centralBillInvoice.getCentralBill().getRemit().getContact().getName());
@@ -184,35 +184,35 @@ public class PdfService implements Callable<String> {
 
     private void emailDocument() throws Exception {
         final String subject =
-                "[" + String.format("%03d", BillingEnvironment.getInstance().getDairyId()) + "-" +
+                "[" + String.format("%03d", Environment.getInstance().getDairyId()) + "-" +
                         String.format("%03d", centralBillInvoice.getCentralBill().getContact().getId()) + "] " +
-                        BillingEnvironment.getInstance().frequencyAsText() + " invoices for " +
-                        BillingEnvironment.getInstance().billingDateAsUSA();
+                        Environment.getInstance().frequencyAsText() + " invoices for " +
+                        Environment.getInstance().billingDateAsUSA();
 
         final StringBuilder messageBody = new StringBuilder()
                 .append("<p>Attached are your <b>")
-                .append(BillingEnvironment.getInstance().frequencyAsText())
+                .append(Environment.getInstance().frequencyAsText())
                 .append("</b> invoices for <b>")
-                .append(BillingEnvironment.getInstance().billingDateAsUSA())
+                .append(Environment.getInstance().billingDateAsUSA())
                 .append("</b>.<br><br><b><i>Thank you for your business!</i></b><br><br>");
 
         new Email(
-                BillingEnvironment.getInstance().getEmailServer(),
+                Environment.getInstance().getEmailServer(),
                 new Message(
                         centralBillInvoice.getCentralBill().getRemit().getContact().getEmail(),
                         centralBillInvoice.getCentralBill().getContact().getEmail(),
-                        BillingEnvironment.getInstance().emailCarbonCopy(),
+                        Environment.getInstance().emailCarbonCopy(),
                         subject,
                         messageBody,
-                        new ArrayList<>(Collections.singletonList(new File(BillingEnvironment.getInstance().emailOutBox() + documentName)))
+                        new ArrayList<>(Collections.singletonList(new File(Environment.getInstance().emailOutBox() + documentName)))
                 )
         ).send();
     }
 
     private void archiveDocument() throws Exception {
         FolderMaintenance.move(
-                BillingEnvironment.getInstance().emailOutBox() + documentName,
-                BillingEnvironment.getInstance().emailSentBox() + documentName
+                Environment.getInstance().emailOutBox() + documentName,
+                Environment.getInstance().emailSentBox() + documentName
         );
     }
 }

@@ -7,7 +7,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.prairiefarms.billing.BillingEnvironment;
+import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.document.pdf.utils.Color;
 import com.prairiefarms.billing.document.pdf.utils.FontSize;
 import org.apache.commons.lang3.ObjectUtils;
@@ -75,7 +75,7 @@ public class SubjectTable {
                         .setFontSize(FontSize.SMALL.asFloat)
                         .setTextAlignment(TextAlignment.LEFT)
                         .add(new Paragraph(
-                                String.format("%03d", BillingEnvironment.getInstance().getDairyId()) +
+                                String.format("%03d", Environment.getInstance().getDairyId()) +
                                         "-" +
                                         String.format("%03d", billToId) +
                                         (ObjectUtils.isEmpty(shipToId) || shipToId == 0 ? "" : "-" + String.format("%05d", shipToId))
@@ -107,7 +107,7 @@ public class SubjectTable {
                         .setFont(TableBase.getFontBold())
                         .setFontSize(FontSize.SMALL.asFloat)
                         .setTextAlignment(TextAlignment.LEFT)
-                        .add(new Paragraph(BillingEnvironment.getInstance().billingDateAsUSA()))
+                        .add(new Paragraph(Environment.getInstance().billingDateAsUSA()))
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)

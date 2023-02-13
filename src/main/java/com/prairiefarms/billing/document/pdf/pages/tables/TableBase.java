@@ -6,7 +6,7 @@ import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Image;
-import com.prairiefarms.billing.BillingEnvironment;
+import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.document.pdf.utils.Color;
 
 import java.io.File;
@@ -35,6 +35,6 @@ class TableBase {
     }
 
     public static Image getLogoImage() throws MalformedURLException {
-        return new Image(ImageDataFactory.create(new File(BillingEnvironment.getInstance().getDairyLogoPath()).getAbsolutePath()));
+        return new Image(ImageDataFactory.create(new File(Environment.getInstance().getDairyLogoPath()).getAbsolutePath()));
     }
 }

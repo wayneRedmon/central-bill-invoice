@@ -8,16 +8,12 @@ public class Billing {
     private static final Logger LOGGER = LoggerFactory.getLogger(Billing.class);
 
     public static void main(String[] args) {
-        LOGGER.info("");  //prime the logger
-
         final LaunchParams launchParams = new LaunchParams(args);
 
         try {
-            if (launchParams.init()) {
-                LOGGER.info(launchParams.getCLIOptions());
-
-                if (BillingEnvironment.getInstance().init(launchParams.getCommandLine())) {
-                    new BillingService().init();
+            if (launchParams.isValid()) {
+                if (Environment.getInstance().init(launchParams.getCommandLine())) {
+                    new Service().init();
                 }
             }
         } catch (Exception exception) {

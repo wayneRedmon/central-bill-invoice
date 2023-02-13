@@ -4,7 +4,7 @@ import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.Document;
-import com.prairiefarms.billing.BillingEnvironment;
+import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.document.pdf.pages.tables.*;
 import com.prairiefarms.billing.invoice.item.ItemSummary;
 import com.prairiefarms.billing.utils.Contact;
@@ -41,7 +41,7 @@ public class ItemSummaryPage {
     }
 
     public void generate() throws IOException {
-        pages = BillingEnvironment.getInstance().getPageCount(ITEM_LINES_PER_PAGE, itemSummaries.size());
+        pages = Environment.getInstance().getPageCount(ITEM_LINES_PER_PAGE, itemSummaries.size());
         page = 0;
 
         stampHeader();

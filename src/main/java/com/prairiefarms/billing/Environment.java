@@ -7,6 +7,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,7 +23,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class BillingEnvironment {
+public class Environment {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Environment.class);
 
     private static final String APPLICATION_PROPERTIES = "./prairiefarmsApplication.properties";
     private static final String BILLING_TYPE = "invoice";
@@ -40,25 +44,29 @@ public class BillingEnvironment {
     private static List<String> emailCarbonCopy;
 
     private static class SingletonHelper {
-        private static final BillingEnvironment INSTANCE = new BillingEnvironment();
+        private static final Environment INSTANCE = new Environment();
     }
 
-    BillingEnvironment() {
+    Environment() {
     }
 
-    public static BillingEnvironment getInstance() {
+    public static Environment getInstance() {
         return SingletonHelper.INSTANCE;
     }
 
-    public boolean init(CommandLine commandLine) throws Exception {
+    public boolean init(CommandLine commandLine) {
         boolean ready = false;
 
-        BillingEnvironment.commandLine = commandLine;
+        Environment.commandLine = commandLine;
 
         if (setCredentials()) {
             if (setServer()) {
-                if (setLibrary() && setDairy() && setFrequency() && setBillingDate()) {
-                    if (setEmailServer()) ready = setEmailCarbonCopy();
+                try {
+                    if (setLibrary() && setDairy() && setFrequency() && setBillingDate()) {
+                        if (setEmailServer()) ready = setEmailCarbonCopy();
+                    }
+                } catch (Exception exception) {
+                    LOGGER.error("Exception in Environment.init()", exception);
                 }
             }
         }
@@ -109,7 +117,7 @@ public class BillingEnvironment {
         return library;
     }
 
-    private static boolean setDairy() throws SQLException, FileNotFoundException {
+    private static boolean setDairy() {
         final String sql = "select hdgName from ds_Hdg where hdg#=1";
 
         dairyId = 0;
@@ -127,22 +135,28 @@ public class BillingEnvironment {
                         }
                     }
                 }
+            } catch (SQLException exception) {
+                LOGGER.error("Exception in Environment.setDairy()", exception);
             }
 
             if (StringUtils.isNotBlank(dairyHeadingName)) {
-                Scanner scanner = new Scanner(new File(PATH_TO_DAIRY_BUSINESS_FILE));
+                try {
+                    Scanner scanner = new Scanner(new File(PATH_TO_DAIRY_BUSINESS_FILE));
 
-                while (scanner.hasNextLine()) {
-                    String[] stringArray = scanner.nextLine().split("\",\"");
+                    while (scanner.hasNextLine()) {
+                        String[] stringArray = scanner.nextLine().split("\",\"");
 
-                    if (StringUtils.normalizeSpace(dairyHeadingName.toLowerCase(Locale.ROOT))
-                            .contains(StringUtils.normalizeSpace(stringArray[2].replace("\"", "").toLowerCase(Locale.ROOT)))) {
-                        dairyId = NumberUtils.toInt(commandLine.getOptionValue("dairy"));
-                        corporateName = stringArray[0].replace("\"", "");
-                        dairyLogoPath = stringArray[1].replace("\"", "");
+                        if (StringUtils.normalizeSpace(dairyHeadingName.toLowerCase(Locale.ROOT))
+                                .contains(StringUtils.normalizeSpace(stringArray[2].replace("\"", "").toLowerCase(Locale.ROOT)))) {
+                            dairyId = NumberUtils.toInt(commandLine.getOptionValue("dairy"));
+                            corporateName = stringArray[0].replace("\"", "");
+                            dairyLogoPath = stringArray[1].replace("\"", "");
 
-                        break;
+                            break;
+                        }
                     }
+                } catch (FileNotFoundException exception) {
+                    LOGGER.error("Exception in Environment.setDairy()", exception);
                 }
             }
         }
@@ -194,7 +208,7 @@ public class BillingEnvironment {
         return billingDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
     }
 
-    private static boolean setEmailServer() throws IOException {
+    private static boolean setEmailServer() {
         emailServer = "";
 
         try (InputStream inputStream = Files.newInputStream(Paths.get(APPLICATION_PROPERTIES))) {
@@ -203,6 +217,8 @@ public class BillingEnvironment {
             properties.load(inputStream);
 
             emailServer = properties.getProperty("emailServer");
+        } catch (IOException exception) {
+            LOGGER.error("Exception in Environment.setEmailServer()", exception);
         }
 
         return StringUtils.isNotBlank(emailServer);
@@ -212,7 +228,7 @@ public class BillingEnvironment {
         return emailServer;
     }
 
-    private static boolean setEmailCarbonCopy() throws SQLException {
+    private static boolean setEmailCarbonCopy() {
         final String sql = "select email from ds_EmailCC";
 
         emailCarbonCopy = new ArrayList<>();
@@ -227,6 +243,8 @@ public class BillingEnvironment {
                     }
                 }
             }
+        } catch (SQLException exception) {
+            LOGGER.error("Exception in Environment.setEmailCarbonCopy()", exception);
         }
 
         return ObjectUtils.isNotEmpty(emailCarbonCopy);
@@ -246,6 +264,7 @@ public class BillingEnvironment {
 
     public int getPageCount(int linesPerPage, int lines) {
         linesPerPage = linesPerPage <= 0 ? 1 : linesPerPage;
+
         lines = lines <= 0 ? 1 : lines;
 
         return lines % linesPerPage != 0 ? lines / linesPerPage + 1 : lines / linesPerPage;

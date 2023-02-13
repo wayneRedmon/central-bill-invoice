@@ -7,7 +7,7 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
-import com.prairiefarms.billing.BillingEnvironment;
+import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.document.pdf.utils.Color;
 import com.prairiefarms.billing.document.pdf.utils.FontSize;
 
@@ -44,7 +44,7 @@ public class InstructionTable {
                         .setFont(TableBase.getFontDefault())
                         .setFontSize(FontSize.LABEL.asFloat)
                         .setTextAlignment(TextAlignment.LEFT)
-                        .add(new Paragraph("Make check(s) payable to: " + BillingEnvironment.getInstance().getCorporateName()))
+                        .add(new Paragraph("Make check(s) payable to: " + Environment.getInstance().getCorporateName()))
                 )
                 .addCell(new Cell(1, 1)
                         .setBorder(Border.NO_BORDER)
