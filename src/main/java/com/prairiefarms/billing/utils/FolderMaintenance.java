@@ -9,17 +9,16 @@ import java.nio.file.Paths;
 
 public final class FolderMaintenance {
 
-    private static final long TWO_WEEK_PURGE_TIME = System.currentTimeMillis() - (14L * 24 * 60 * 60 * 1000);
-
-    public static void clean(String pathAsString) throws Exception {
+    public static void clean(final String pathAsString, final int days) throws Exception {
         final File directory = new File(pathAsString);
+        final long purgeDate = System.currentTimeMillis() - ((long) days * 24 * 60 * 60 * 1000);
 
         if (directory.exists()) {
             final File[] files = directory.listFiles();
 
             if (ObjectUtils.isNotEmpty(files)) {
                 for (File file : files) {
-                    if (file.lastModified() >= TWO_WEEK_PURGE_TIME) {
+                    if (file.lastModified() >= purgeDate) {
                         if (!file.delete())
                             throw new Exception("Exception occurred while deleting file " + file.getPath());
                     }

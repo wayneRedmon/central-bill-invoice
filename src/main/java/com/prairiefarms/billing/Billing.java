@@ -1,6 +1,5 @@
 package com.prairiefarms.billing;
 
-import com.prairiefarms.billing.utils.FolderMaintenance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,11 +17,7 @@ public class Billing {
                 LOGGER.info(launchParams.getCLIOptions());
 
                 if (BillingEnvironment.getInstance().init(launchParams.getCommandLine())) {
-                    FolderMaintenance.clean();
-
-                    final BillingService billingService = new BillingService();
-
-                    billingService.init();
+                    new BillingService().init();
                 }
             }
         } catch (Exception exception) {

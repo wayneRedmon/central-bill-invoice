@@ -12,6 +12,7 @@ import com.prairiefarms.billing.invoice.centralBill.CentralBillInvoice;
 import com.prairiefarms.billing.invoice.centralBill.customer.CustomerInvoice;
 import com.prairiefarms.billing.invoice.item.Item;
 import com.prairiefarms.billing.sale.SaleDAO;
+import com.prairiefarms.billing.utils.FolderMaintenance;
 import com.prairiefarms.utils.database.HostConnection;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
@@ -34,13 +35,14 @@ public class BillingService {
     }
 
     public void init() throws Exception {
+        FolderMaintenance.clean(BillingEnvironment.getInstance().emailSentBox(), 7);
+
         centralBillInvoices = new ArrayList<>();
 
-        getCentralBillInvoices();
+        this.getCentralBillInvoices();
 
-        if (ObjectUtils.isNotEmpty(centralBillInvoices)) {
+        if (ObjectUtils.isNotEmpty(centralBillInvoices))
             this.executeThreads();
-        }
     }
 
     private void getCentralBillInvoices() throws SQLException {
@@ -93,14 +95,14 @@ public class BillingService {
 
                     if (ObjectUtils.isNotEmpty(invoices))
                         customerInvoices.add(
-                            new CustomerInvoice(customer, invoices)
-                    );
+                                new CustomerInvoice(customer, invoices)
+                        );
                 }
 
                 if (ObjectUtils.isNotEmpty(customerInvoices))
                     centralBillInvoices.add(
-                        new CentralBillInvoice(centralBill, customerInvoices)
-                );
+                            new CentralBillInvoice(centralBill, customerInvoices)
+                    );
             }
         }
     }
