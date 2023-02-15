@@ -111,8 +111,7 @@ public class Service {
             if (DocumentType.S.fileExtension.equals(centralBillInvoice.getCentralBill().getDocumentType().fileExtension)) {
                 callables.add(new PdfService(centralBillInvoice));
             } else if (DocumentType.W.fileExtension.equals(centralBillInvoice.getCentralBill().getDocumentType().fileExtension)) {
-                //callables.add(new XlsxService(centralBillInvoice));
-                new XlsxService(centralBillInvoice).call();
+                callables.add(new XlsxService(centralBillInvoice));
             }
         }
 

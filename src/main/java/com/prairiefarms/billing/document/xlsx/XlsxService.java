@@ -16,6 +16,7 @@ import com.prairiefarms.utils.email.Email;
 import com.prairiefarms.utils.email.Message;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +28,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-public class XlsxService {
+public class XlsxService implements Callable<String> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(XlsxService.class);
 
@@ -42,6 +44,7 @@ public class XlsxService {
         this.centralBillInvoice = centralBillInvoice;
     }
 
+    @Override
     public String call() {
         StringBuilder loggingText = new StringBuilder()
                 .append("[")
@@ -139,7 +142,7 @@ public class XlsxService {
                 StringUtils.normalizeSpace(centralBillInvoice.getCentralBill().getDocumentType().fileExtension);
 
         try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(Environment.getInstance().getXlsxTemplate())) {
-            //ZipSecureFile.setMinInflateRatio(0);
+            ZipSecureFile.setMinInflateRatio(0);
 
             WorkbookEnvironment.getInstance().init(xssfWorkbook);
 
