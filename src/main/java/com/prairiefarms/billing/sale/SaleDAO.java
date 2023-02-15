@@ -56,10 +56,10 @@ public class SaleDAO {
     }
 
     public List<Header> headerList(int centralBillId, int customerId) throws SQLException {
-        final String sql = "select invoiceId,deliveryDate,branchId,routeId,purchaseOrder " +
+        final String sql = "select invoiceId,deliveryDate,branchId,routeId,purchaseOrder,isDistributor " +
                 "from ds364Awrk " +
                 "where centralBillId=? and customerId=? " +
-                "group by invoiceId,deliveryDate,branchId,routeId,purchaseOrder " +
+                "group by invoiceId,deliveryDate,branchId,routeId,purchaseOrder,isDistributor " +
                 "order by deliveryDate,invoiceId";
 
         List<Header> headers = new ArrayList<>();
@@ -75,7 +75,8 @@ public class SaleDAO {
                         new Header(
                                 rsHeader.getInt("invoiceId"),
                                 rsHeader.getDate("deliveryDate").toLocalDate(),
-                                rsHeader.getString("purchaseOrder")
+                                rsHeader.getString("purchaseOrder"),
+                                rsHeader.getInt("isDistributor") > 0
                         )
                 );
             }
@@ -86,7 +87,7 @@ public class SaleDAO {
 
     public List<Item> itemList(int centralBillId, int customerId, int invoiceId) throws SQLException {
         final String sql = "select salesType,itemId,itemName,quantity,priceEach,isPromotion,extension," +
-                "itemSize,itemType,itemLabel " +
+                "itemSize,itemType,itemLabel,pointsEach " +
                 "from ds364Awrk " +
                 "where centralBillId=? and customerId=? and invoiceId=? " +
                 "order by salesType,itemSize,itemType,itemLabel,itemName,itemId";
@@ -112,7 +113,8 @@ public class SaleDAO {
                                 resultSet.getDouble("extension"),
                                 resultSet.getDouble("itemSize"),
                                 resultSet.getDouble("itemType"),
-                                resultSet.getInt("itemLabel")
+                                resultSet.getInt("itemLabel"),
+                                resultSet.getDouble("pointsEach")
                         )
                 );
             }

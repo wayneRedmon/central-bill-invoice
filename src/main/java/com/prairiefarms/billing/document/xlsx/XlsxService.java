@@ -1,14 +1,11 @@
-package com.prairiefarms.billing.document.pdf;
+package com.prairiefarms.billing.document.xlsx;
 
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfDocumentInfo;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
 import com.prairiefarms.billing.Environment;
-import com.prairiefarms.billing.document.pdf.pages.InvoicePage;
-import com.prairiefarms.billing.document.pdf.pages.ItemSummaryPage;
-import com.prairiefarms.billing.document.pdf.pages.RemittancePage;
+import com.prairiefarms.billing.document.xlsx.workbook.WorkbookEnvironment;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.InvoiceSheet;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.ItemSummarySheet;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.RemittanceSheet;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.overlay.StampLogo;
 import com.prairiefarms.billing.invoice.Invoice;
 import com.prairiefarms.billing.invoice.centralBill.CentralBillInvoice;
 import com.prairiefarms.billing.invoice.centralBill.customer.CustomerInvoice;
@@ -17,33 +14,34 @@ import com.prairiefarms.billing.invoice.item.ItemSummary;
 import com.prairiefarms.billing.utils.FolderMaintenance;
 import com.prairiefarms.utils.email.Email;
 import com.prairiefarms.utils.email.Message;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
-public class PdfService implements Callable<String> {
+public class XlsxService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PdfService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(XlsxService.class);
 
     private final CentralBillInvoice centralBillInvoice;
 
-    private String documentName;
     private List<ItemSummary> sortedItemSummaries;
+    private String documentName;
 
-    public PdfService(CentralBillInvoice centralBillInvoice) {
+    public XlsxService(CentralBillInvoice centralBillInvoice) {
         this.centralBillInvoice = centralBillInvoice;
     }
 
-    @Override
     public String call() {
         StringBuilder loggingText = new StringBuilder()
                 .append("[")
@@ -61,7 +59,7 @@ public class PdfService implements Callable<String> {
 
             success = true;
         } catch (Exception exception) {
-            LOGGER.error("Exception in PdfService.call()", exception);
+            LOGGER.error("Exception in XlsxService.call()", exception);
         } finally {
             loggingText
                     .append(" - was an invoice generated? (")
@@ -131,7 +129,7 @@ public class PdfService implements Callable<String> {
                 .collect(Collectors.toList());
     }
 
-    private void createDocument() throws IOException {
+    private void createDocument() {
         documentName = "Invoice_" +
                 String.format("%03d", Environment.getInstance().getDairyId()) +
                 "_" +
@@ -140,47 +138,24 @@ public class PdfService implements Callable<String> {
                 Environment.getInstance().billingDateAsYYMMD() +
                 StringUtils.normalizeSpace(centralBillInvoice.getCentralBill().getDocumentType().fileExtension);
 
-        try (PdfDocument pdfDocument = new PdfDocument(new PdfWriter(new File(Environment.getInstance().emailOutBox() + documentName)))) {
-            PdfDocumentInfo pdfDocumentInfo = pdfDocument.getDocumentInfo();
-            pdfDocumentInfo.setTitle("Central Bill Invoice");
-            pdfDocumentInfo.setAuthor(centralBillInvoice.getCentralBill().getRemit().getContact().getName());
-            pdfDocumentInfo.setSubject("invoice");
-            pdfDocumentInfo.setKeywords("central,bill,invoice");
-            pdfDocumentInfo.setCreator(
-                    centralBillInvoice.getCentralBill().getRemit().getContact().getName() + ", " +
-                            centralBillInvoice.getCentralBill().getRemit().getContact().getPhone()
-            );
+        try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(Environment.getInstance().getXlsxTemplate())) {
+            //ZipSecureFile.setMinInflateRatio(0);
 
-            try (Document document = new Document(pdfDocument)) {
-                document.getPdfDocument().setDefaultPageSize(PageSize.LETTER);
-                document.setMargins(36f, 36f, 36f, 36f);
+            WorkbookEnvironment.getInstance().init(xssfWorkbook);
 
-                final RemittancePage remittancePage = new RemittancePage(document, centralBillInvoice);
-                remittancePage.generate();
+            StampLogo.set(xssfWorkbook);
 
-                for (CustomerInvoice customerInvoice : centralBillInvoice.getCustomerInvoices()) {
-                    for (Invoice invoice : customerInvoice.getInvoices()) {
-                        InvoicePage invoicePage = new InvoicePage(
-                                document,
-                                centralBillInvoice.getCentralBill().getRemit().getContact(),
-                                centralBillInvoice.getCentralBill().getContact(),
-                                customerInvoice.getCustomer(),
-                                invoice
-                        );
+            new RemittanceSheet(xssfWorkbook).generate(centralBillInvoice);
+            new ItemSummarySheet(xssfWorkbook).generate(centralBillInvoice.getCentralBill(), sortedItemSummaries);
+            new InvoiceSheet(xssfWorkbook).generate(centralBillInvoice);
 
-                        invoicePage.generate();
-                    }
-                }
+            if (ObjectUtils.isNotEmpty(xssfWorkbook)) xssfWorkbook.removeSheetAt(2);
 
-                final ItemSummaryPage itemSummaryPage = new ItemSummaryPage(
-                        document,
-                        centralBillInvoice.getCentralBill().getRemit().getContact(),
-                        centralBillInvoice.getCentralBill().getContact(),
-                        sortedItemSummaries
-                );
-
-                itemSummaryPage.generate();
+            try (FileOutputStream fileOutputStream = new FileOutputStream(Environment.getInstance().emailOutBox() + documentName)) {
+                xssfWorkbook.write(fileOutputStream);
             }
+        } catch (IOException exception) {
+            LOGGER.error("Exception in XlsxService.createDocument()", exception);
         }
     }
 

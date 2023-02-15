@@ -12,6 +12,7 @@ public class Item {
     private final double size;
     private final double type;
     private final int label;
+    private final double pointsEach;
 
     public Item(String salesType,
                 int id,
@@ -22,7 +23,8 @@ public class Item {
                 double extension,
                 double size,
                 double type,
-                int label) {
+                int label,
+                double pointsEach) {
         this.salesType = salesType;
         this.id = id;
         this.name = name;
@@ -33,6 +35,7 @@ public class Item {
         this.size = size;
         this.type = type;
         this.label = label;
+        this.pointsEach = pointsEach;
     }
 
     public String getSalesType() {
@@ -81,4 +84,6 @@ public class Item {
     public int getLabel() {
         return label;
     }
+
+    public double getPointsEach() { return Math.ceil(pointsEach * quantity); }
 }

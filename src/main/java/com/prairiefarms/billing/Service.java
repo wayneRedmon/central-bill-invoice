@@ -6,6 +6,7 @@ import com.prairiefarms.billing.centralBill.CentralBillDAO;
 import com.prairiefarms.billing.customer.Customer;
 import com.prairiefarms.billing.customer.CustomerDAO;
 import com.prairiefarms.billing.document.pdf.PdfService;
+import com.prairiefarms.billing.document.xlsx.XlsxService;
 import com.prairiefarms.billing.invoice.Header;
 import com.prairiefarms.billing.invoice.Invoice;
 import com.prairiefarms.billing.invoice.centralBill.CentralBillInvoice;
@@ -110,7 +111,8 @@ public class Service {
             if (DocumentType.S.fileExtension.equals(centralBillInvoice.getCentralBill().getDocumentType().fileExtension)) {
                 callables.add(new PdfService(centralBillInvoice));
             } else if (DocumentType.W.fileExtension.equals(centralBillInvoice.getCentralBill().getDocumentType().fileExtension)) {
-                //todo: generate xlsx
+                //callables.add(new XlsxService(centralBillInvoice));
+                new XlsxService(centralBillInvoice).call();
             }
         }
 
@@ -119,9 +121,7 @@ public class Service {
 
             List<Future<String>> futures = executorService.invokeAll(callables);
 
-            for (Future<String> future : futures) {
-                LOGGER.info(future.get());
-            }
+            for (Future<String> future : futures) LOGGER.info(future.get());
 
             executorService.shutdown();
         }

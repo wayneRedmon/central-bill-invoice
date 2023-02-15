@@ -5,13 +5,15 @@ public class ItemSummary {
     private final String salesType;
     private final int id;
     private final String name;
-    private int quantity;
     private final double priceEach;
     private final boolean promotion;
-    private double extension;
     private final double size;
     private final double type;
     private final int label;
+
+    private int quantity;
+    private double extension;
+    private double pointsEach;
 
     public ItemSummary(String salesType,
                        int id,
@@ -22,7 +24,8 @@ public class ItemSummary {
                        double extension,
                        double size,
                        double type,
-                       int label) {
+                       int label,
+                       double pointsEach) {
         this.salesType = salesType;
         this.id = id;
         this.name = name;
@@ -33,6 +36,7 @@ public class ItemSummary {
         this.size = size;
         this.type = type;
         this.label = label;
+        this.pointsEach = pointsEach;
     }
 
     public String getSalesType() {
@@ -79,6 +83,12 @@ public class ItemSummary {
         return label;
     }
 
+    public void setPointsEach(double pointsEach) {
+        this.pointsEach += pointsEach;
+    }
+
+    public double getPointsEach() { return pointsEach; }
+
     public Item getItem() {
         return new Item(
                 salesType,
@@ -90,7 +100,8 @@ public class ItemSummary {
                 extension,
                 size,
                 type,
-                label
+                label,
+                pointsEach
         );
     }
 }

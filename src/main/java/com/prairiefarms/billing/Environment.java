@@ -10,10 +10,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
@@ -30,6 +27,7 @@ public class Environment {
     private static final String APPLICATION_PROPERTIES = "./prairiefarmsApplication.properties";
     private static final String BILLING_TYPE = "invoice";
     private static final String PATH_TO_DAIRY_BUSINESS_FILE = "./DairyBusiness.csv";
+    private static final String XLSX_TEMPLATE_PATH = "./templates/DistributorInvoice.xlsx";
 
     private static CommandLine commandLine;
     private static Credentials credentials;
@@ -42,6 +40,8 @@ public class Environment {
     private static LocalDate billingDate;
     private static String emailServer;
     private static List<String> emailCarbonCopy;
+    private static String xlsxDocumentPassword;
+    private static InputStream xlsxTemplate;
 
     private static class SingletonHelper {
         private static final Environment INSTANCE = new Environment();
@@ -55,14 +55,14 @@ public class Environment {
     }
 
     public boolean init(CommandLine commandLine) {
-        boolean ready = false;
-
         Environment.commandLine = commandLine;
+
+        boolean ready = false;
 
         if (setCredentials()) {
             if (setServer()) {
                 try {
-                    if (setLibrary() && setDairy() && setFrequency() && setBillingDate()) {
+                    if (setLibrary() && setDairy() && setFrequency() && setBillingDate() && setXlsxTemplate()) {
                         if (setEmailServer()) ready = setEmailCarbonCopy();
                     }
                 } catch (Exception exception) {
@@ -73,6 +73,69 @@ public class Environment {
 
         return ready;
     }
+
+    public Credentials getCredentials() {
+        return credentials;
+    }
+
+    public String getServer() {
+        return server;
+    }
+
+    public String getLibrary() {
+        return library;
+    }
+
+    public int getDairyId() {
+        return dairyId;
+    }
+
+    public String getDairyLogoPath() {
+        return dairyLogoPath;
+    }
+
+    public String getCorporateName() {
+        return corporateName;
+    }
+
+    public String frequencyAsText() {
+        return frequency.type;
+    }
+
+    public String billingDateAsUSA() {
+        return billingDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
+    }
+
+    public String billingDateAsYYMMD() {
+        return billingDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    }
+
+    public String getEmailServer() {
+        return emailServer;
+    }
+
+    public String getXlsxDocumentPassword() { return xlsxDocumentPassword; }
+
+    public List<String> emailCarbonCopy() {
+        return emailCarbonCopy;
+    }
+
+    public String emailOutBox() {
+        return "mail/" + library + "/" + BILLING_TYPE + "/" + frequency.type + "/";
+    }
+
+    public String emailSentBox() {
+        return "mail/" + library + "/" + BILLING_TYPE + "/" + frequency.type + "/sent/";
+    }
+
+    public int getPageCount(int linesPerPage, int lines) {
+        linesPerPage = linesPerPage <= 0 ? 1 : linesPerPage;
+        lines = lines <= 0 ? 1 : lines;
+
+        return lines % linesPerPage != 0 ? lines / linesPerPage + 1 : lines / linesPerPage;
+    }
+
+    public InputStream getXlsxTemplate() { return xlsxTemplate; }
 
     private static boolean setCredentials() {
         credentials = null;
@@ -86,10 +149,6 @@ public class Environment {
         return ObjectUtils.isNotEmpty(credentials);
     }
 
-    public Credentials getCredentials() {
-        return credentials;
-    }
-
     private static boolean setServer() {
         server = "";
 
@@ -100,10 +159,6 @@ public class Environment {
         return StringUtils.isNotBlank(server);
     }
 
-    public String getServer() {
-        return server;
-    }
-
     private static boolean setLibrary() {
         library = "";
 
@@ -111,10 +166,6 @@ public class Environment {
             library = StringUtils.normalizeSpace(commandLine.getOptionValue("library"));
 
         return StringUtils.isNotBlank(library);
-    }
-
-    public String getLibrary() {
-        return library;
     }
 
     private static boolean setDairy() {
@@ -166,18 +217,6 @@ public class Environment {
                 StringUtils.isNotBlank(dairyLogoPath);
     }
 
-    public int getDairyId() {
-        return dairyId;
-    }
-
-    public String getDairyLogoPath() {
-        return dairyLogoPath;
-    }
-
-    public String getCorporateName() {
-        return corporateName;
-    }
-
     private static boolean setFrequency() {
         frequency = null;
 
@@ -185,10 +224,6 @@ public class Environment {
             frequency = Frequency.valueOf(commandLine.getOptionValue("frequency").toUpperCase(Locale.ROOT));
 
         return ObjectUtils.isNotEmpty(frequency);
-    }
-
-    public String frequencyAsText() {
-        return frequency.type;
     }
 
     private static boolean setBillingDate() {
@@ -200,14 +235,6 @@ public class Environment {
         return ObjectUtils.isNotEmpty(billingDate);
     }
 
-    public String billingDateAsUSA() {
-        return billingDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy"));
-    }
-
-    public String billingDateAsYYMMD() {
-        return billingDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-    }
-
     private static boolean setEmailServer() {
         emailServer = "";
 
@@ -217,15 +244,12 @@ public class Environment {
             properties.load(inputStream);
 
             emailServer = properties.getProperty("emailServer");
+            xlsxDocumentPassword = properties.getProperty("xlsxPassword");
         } catch (IOException exception) {
             LOGGER.error("Exception in Environment.setEmailServer()", exception);
         }
 
         return StringUtils.isNotBlank(emailServer);
-    }
-
-    public String getEmailServer() {
-        return emailServer;
     }
 
     private static boolean setEmailCarbonCopy() {
@@ -250,23 +274,17 @@ public class Environment {
         return ObjectUtils.isNotEmpty(emailCarbonCopy);
     }
 
-    public List<String> emailCarbonCopy() {
-        return emailCarbonCopy;
-    }
+    private static boolean setXlsxTemplate() {
+        boolean templateFound = false;
 
-    public String emailOutBox() {
-        return "mail/" + library + "/" + BILLING_TYPE + "/" + frequency.type + "/";
-    }
+        try {
+            xlsxTemplate = new FileInputStream(XLSX_TEMPLATE_PATH);
 
-    public String emailSentBox() {
-        return "mail/" + library + "/" + BILLING_TYPE + "/" + frequency.type + "/sent/";
-    }
+            templateFound = true;
+        } catch (FileNotFoundException exception) {
+            LOGGER.error("Exception in Environment.setXlsxTemplate()", exception);
+        }
 
-    public int getPageCount(int linesPerPage, int lines) {
-        linesPerPage = linesPerPage <= 0 ? 1 : linesPerPage;
-
-        lines = lines <= 0 ? 1 : lines;
-
-        return lines % linesPerPage != 0 ? lines / linesPerPage + 1 : lines / linesPerPage;
+        return templateFound;
     }
 }
