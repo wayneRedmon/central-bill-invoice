@@ -138,6 +138,8 @@ public class Service {
                 }
             }
 
+            LOGGER.info("\r\n");
+
             executorService.shutdown();
         }
     }

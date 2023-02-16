@@ -44,8 +44,7 @@ public class ApplicationCommandLine {
 
             cliOptionsAsText
                     .append("\r\n")
-                    .append(StringUtils.repeat("-", 125))
-                    .append("\r\n");
+                    .append(StringUtils.repeat("-", 125));
         }
     }
 

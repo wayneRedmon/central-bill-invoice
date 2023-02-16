@@ -16,14 +16,14 @@ import java.util.List;
 
 public class ItemSummarySheet {
 
-    private final XSSFWorkbook workbook;
+    private final XSSFWorkbook xssfWorkbook;
 
-    public ItemSummarySheet(XSSFWorkbook workbook) {
-        this.workbook = workbook;
+    public ItemSummarySheet(XSSFWorkbook xssfWorkbook) {
+        this.xssfWorkbook = xssfWorkbook;
     }
 
     public void generate(CentralBill centralBill, List<ItemSummary> itemSummaries) {
-        XSSFSheet sheet = workbook.getSheetAt(WorkbookEnvironment.getInstance().ITEM_SUMMARY_SHEET_TO_COPY);
+        XSSFSheet sheet = xssfWorkbook.getSheetAt(WorkbookEnvironment.getInstance().ITEM_SUMMARY_SHEET_TO_COPY);
         sheet.setDefaultRowHeightInPoints(WorkbookEnvironment.getInstance().DEFAULT_ROW_HEIGHT_IN_POINTS);
         sheet.setDisplayGridlines(false);
         sheet.setPrintGridlines(false);

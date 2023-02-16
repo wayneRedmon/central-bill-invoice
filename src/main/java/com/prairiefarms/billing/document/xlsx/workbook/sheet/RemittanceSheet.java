@@ -17,14 +17,14 @@ import java.math.BigDecimal;
 
 public class RemittanceSheet {
 
-    private final XSSFWorkbook workbook;
+    private final XSSFWorkbook xssfWorkbook;
 
-    public RemittanceSheet(XSSFWorkbook workbook) {
-        this.workbook = workbook;
+    public RemittanceSheet(XSSFWorkbook xssfWorkbook) {
+        this.xssfWorkbook = xssfWorkbook;
     }
 
     public void generate(CentralBillInvoice centralBillInvoice) {
-        XSSFSheet sheet = workbook.getSheetAt(WorkbookEnvironment.getInstance().REMITTANCE_SHEET_TO_COPY);
+        XSSFSheet sheet = xssfWorkbook.getSheetAt(WorkbookEnvironment.getInstance().REMITTANCE_SHEET_TO_COPY);
         sheet.setDefaultRowHeightInPoints(WorkbookEnvironment.getInstance().DEFAULT_ROW_HEIGHT_IN_POINTS);
         sheet.setDisplayGridlines(false);
         sheet.setPrintGridlines(false);

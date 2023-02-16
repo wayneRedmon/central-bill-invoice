@@ -87,7 +87,7 @@ public class SaleDAO {
 
     public List<Item> itemList(int centralBillId, int customerId, int invoiceId) throws SQLException {
         final String sql = "select salesType,itemId,itemName,quantity,priceEach,isPromotion,extension," +
-                "itemSize,itemType,itemLabel,pointsEach " +
+                "itemSize,itemType,itemLabel,pointsEach,totalPoints " +
                 "from ds364Awrk " +
                 "where centralBillId=? and customerId=? and invoiceId=? " +
                 "order by salesType,itemSize,itemType,itemLabel,itemName,itemId";
@@ -114,7 +114,8 @@ public class SaleDAO {
                                 resultSet.getDouble("itemSize"),
                                 resultSet.getDouble("itemType"),
                                 resultSet.getInt("itemLabel"),
-                                resultSet.getDouble("pointsEach")
+                                resultSet.getDouble("pointsEach"),
+                                resultSet.getDouble("totalPoints")
                         )
                 );
             }

@@ -13,6 +13,7 @@ public class Item {
     private final double type;
     private final int label;
     private final double pointsEach;
+    private final double totalPoints;
 
     public Item(String salesType,
                 int id,
@@ -24,7 +25,8 @@ public class Item {
                 double size,
                 double type,
                 int label,
-                double pointsEach) {
+                double pointsEach,
+                double totalPoints) {
         this.salesType = salesType;
         this.id = id;
         this.name = name;
@@ -36,6 +38,7 @@ public class Item {
         this.type = type;
         this.label = label;
         this.pointsEach = pointsEach;
+        this.totalPoints = totalPoints;
     }
 
     public String getSalesType() {
@@ -50,7 +53,6 @@ public class Item {
         return String.format("%07d", id).substring(0, 2) + "-" +
                 String.format("%07d", id).substring(2, 5) + "-" +
                 String.format("%07d", id).substring(5, 7);
-
     }
 
     public String getName() {
@@ -85,5 +87,7 @@ public class Item {
         return label;
     }
 
-    public double getPointsEach() { return Math.ceil(pointsEach * quantity); }
+    public double getPointsEach() { return pointsEach; }
+
+    public double getTotalPoints() { return totalPoints; }
 }

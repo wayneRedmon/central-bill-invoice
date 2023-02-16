@@ -27,7 +27,7 @@ public class ItemSort {
                                 itemSummary.getPriceEach() == item.getPriceEach()) {
                             itemSummary.setQuantity(item.getQuantity());
                             itemSummary.setExtension(item.getExtension());
-                            itemSummary.setPointsEach(item.getPointsEach());
+                            itemSummary.setTotalPoints(item.getTotalPoints());
 
                             found = true;
 
@@ -48,7 +48,8 @@ public class ItemSort {
                                         item.getSize(),
                                         item.getType(),
                                         item.getLabel(),
-                                        item.getPointsEach()
+                                        item.getPointsEach(),
+                                        item.getTotalPoints()
                                 )
                         );
                     }

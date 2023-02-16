@@ -3,9 +3,9 @@ package com.prairiefarms.billing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Billing {
+public class Main {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Billing.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
         try {
@@ -16,7 +16,7 @@ public class Billing {
             if (Environment.getInstance().init(applicationCommandLine.getCommandLine()))
                 new Service().init();
         } catch (Exception exception) {
-            LOGGER.error("Exception in Billing.main()", exception);
+            LOGGER.error("Exception in Main.main()", exception);
         }
     }
 }
