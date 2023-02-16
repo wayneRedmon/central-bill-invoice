@@ -10,7 +10,7 @@ public class ItemSummary {
     private final double size;
     private final double type;
     private final int label;
-    private double pointsEach;
+    private final double pointsEach;
 
     private int quantity;
     private double extension;

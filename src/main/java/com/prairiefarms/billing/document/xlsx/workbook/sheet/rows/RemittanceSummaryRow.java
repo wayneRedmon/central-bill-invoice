@@ -1,7 +1,7 @@
 package com.prairiefarms.billing.document.xlsx.workbook.sheet.rows;
 
 import com.prairiefarms.billing.customer.Customer;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.CentralBilAccountCell;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.CentralBillAccountCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.CustomerInvoiceCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.CustomerInvoiceNameCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.DeliveryDateCell;
@@ -25,7 +25,7 @@ public class RemittanceSummaryRow {
 
     public static void set(XSSFSheet sheet, int remitId, int customerId) {
         InvoiceDateCell.set(sheet);
-        CentralBilAccountCell.set(sheet, remitId, customerId);
+        CentralBillAccountCell.set(sheet, remitId, customerId);
         RemitNameCell.set(sheet);
     }
 

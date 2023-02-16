@@ -10,7 +10,10 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
@@ -27,7 +30,7 @@ public class Environment {
     private static final String APPLICATION_PROPERTIES = "./prairiefarmsApplication.properties";
     private static final String BILLING_TYPE = "invoice";
     private static final String PATH_TO_DAIRY_BUSINESS_FILE = "./DairyBusiness.csv";
-    private static final String XLSX_TEMPLATE_PATH = "./templates/DistributorInvoice.xlsx";
+    private static final String XLSX_TEMPLATE_PATH = "/templates/DistributorInvoice.xlsx";
 
     private static CommandLine commandLine;
     private static Credentials credentials;
@@ -114,7 +117,9 @@ public class Environment {
         return emailServer;
     }
 
-    public String getXlsxDocumentPassword() { return xlsxDocumentPassword; }
+    public String getXlsxDocumentPassword() {
+        return xlsxDocumentPassword;
+    }
 
     public List<String> emailCarbonCopy() {
         return emailCarbonCopy;
@@ -135,7 +140,9 @@ public class Environment {
         return lines % linesPerPage != 0 ? lines / linesPerPage + 1 : lines / linesPerPage;
     }
 
-    public InputStream getXlsxTemplate() { return xlsxTemplate; }
+    public InputStream getXlsxTemplate() {
+        return xlsxTemplate;
+    }
 
     private static boolean setCredentials() {
         credentials = null;
@@ -275,16 +282,8 @@ public class Environment {
     }
 
     private static boolean setXlsxTemplate() {
-        boolean templateFound = false;
+        xlsxTemplate = Environment.class.getClassLoader().getResourceAsStream(XLSX_TEMPLATE_PATH);
 
-        try {
-            xlsxTemplate = new FileInputStream(XLSX_TEMPLATE_PATH);
-
-            templateFound = true;
-        } catch (FileNotFoundException exception) {
-            LOGGER.error("Exception in Environment.setXlsxTemplate()", exception);
-        }
-
-        return templateFound;
+        return ObjectUtils.isNotEmpty(xlsxTemplate);
     }
 }

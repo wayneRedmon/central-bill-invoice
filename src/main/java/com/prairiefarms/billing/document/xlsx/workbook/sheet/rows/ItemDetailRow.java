@@ -12,7 +12,6 @@ import com.prairiefarms.billing.invoice.item.Item;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 public class ItemDetailRow {
 
