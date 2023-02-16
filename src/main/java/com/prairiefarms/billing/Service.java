@@ -127,7 +127,7 @@ public class Service {
                             "\r\nException in Service.executeThreads() while processing " +
                                     "[" + future.get().getCentralBill().getContact().getId() + "] " +
                                     future.get().getCentralBill().getContact().getName(),
-                            future.get().getException() + "\r\n"
+                            future.get().getException().getCause()
                     );
                 } else {
                     LOGGER.info(

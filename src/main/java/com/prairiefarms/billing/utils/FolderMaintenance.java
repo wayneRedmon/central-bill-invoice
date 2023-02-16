@@ -18,7 +18,7 @@ public final class FolderMaintenance {
 
             if (ObjectUtils.isNotEmpty(files)) {
                 for (File file : files) {
-                    if (file.lastModified() >= purgeDate) {
+                    if (file.lastModified() <= purgeDate) {
                         if (!file.delete())
                             throw new Exception("Exception occurred while deleting file " + file.getPath());
                     }

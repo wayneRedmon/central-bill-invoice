@@ -10,7 +10,7 @@ public class RemitNameCell {
 
     public static void set(XSSFSheet sheet) {
         XSSFCell cell = sheet.getRow(9).getCell(4);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getMonospaceCenterStyle());
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getMonospaceInstructionStyle());
         cell.setCellType(CellType.STRING);
         cell.setCellValue(Environment.getInstance().getCorporateName());
     }

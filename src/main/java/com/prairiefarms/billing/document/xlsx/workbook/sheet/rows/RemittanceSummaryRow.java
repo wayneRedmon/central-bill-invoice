@@ -5,6 +5,7 @@ import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralB
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.CustomerInvoiceCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.CustomerInvoiceNameCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.DeliveryDateCell;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.InvoiceDueByCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.subTotal.*;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.total.CustomerExtensionTotalCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.total.CustomerPointsTotalCell;
@@ -51,8 +52,7 @@ public class RemittanceSummaryRow {
                     ItemExtensionCell.set(sheet, rowNumber, column, subTotal);
                     break;
                 case 8:
-                    //todo: fix due by date (is it necessary?)
-                    //InvoiceDueByCell.set(sheet, rowNumber, column, deliveryDate, customer.getTerms().getDueDays());
+                    InvoiceDueByCell.set(sheet, rowNumber, column, customer.getDueByDate(deliveryDate));
                     break;
             }
         }

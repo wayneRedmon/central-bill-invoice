@@ -12,7 +12,7 @@ public class DeliveryDateCell {
 
     public static void set(XSSFSheet sheet, int rowNumber, int columnNumber, LocalDate deliveryDate) {
         XSSFCell cell = sheet.getRow(rowNumber).getCell(columnNumber);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getMonospaceCenterStyle());
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getMonospaceDetailDateStyle());
         cell.setCellType(CellType.STRING);
         cell.setCellValue(deliveryDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
     }

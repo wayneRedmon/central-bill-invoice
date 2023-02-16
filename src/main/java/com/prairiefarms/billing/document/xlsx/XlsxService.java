@@ -61,10 +61,10 @@ public class XlsxService implements Callable<DocumentThread> {
                 Environment.getInstance().billingDateAsYYMMD() +
                 StringUtils.normalizeSpace(centralBillInvoice.getCentralBill().getDocumentType().fileExtension);
 
-        try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(Environment.getInstance().getXlsxTemplate())) {
-            ZipSecureFile.setMinInflateRatio(0);
+        ZipSecureFile.setMinInflateRatio(0);
 
-            WorkbookEnvironment.getInstance().init(xssfWorkbook);
+        try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(Environment.getInstance().getXlsxTemplate())) {
+            WorkbookEnvironment.init(xssfWorkbook);
 
             new Logo(xssfWorkbook).stamp();
             new RemittanceSheet(xssfWorkbook).generate(centralBillInvoice);
@@ -83,30 +83,19 @@ public class XlsxService implements Callable<DocumentThread> {
     }
 
     private void emailDocument() throws Exception {
-        final String subject =
-                "[" + String.format("%03d", Environment.getInstance().getDairyId()) + "-" +
-                        String.format("%03d", centralBillInvoice.getCentralBill().getContact().getId()) + "] " +
-                        Environment.getInstance().frequencyAsText() + " invoices for " +
-                        Environment.getInstance().billingDateAsUSA();
-
-        final StringBuilder messageBody = new StringBuilder()
-                .append("<p>Attached are your <b>")
-                .append(Environment.getInstance().frequencyAsText())
-                .append("</b> invoices for <b>")
-                .append(Environment.getInstance().billingDateAsUSA())
-                .append("</b>.<br><br><b><i>Thank you for your business!</i></b><br><br>");
-
-        new Email(
+        Email email = new Email(
                 Environment.getInstance().getEmailServer(),
                 new Message(
                         centralBillInvoice.getCentralBill().getRemit().getContact().getEmail(),
                         centralBillInvoice.getCentralBill().getContact().getEmail(),
                         Environment.getInstance().emailCarbonCopy(),
-                        subject,
-                        messageBody,
+                        Environment.getInstance().getEmailSubject(centralBillInvoice.getCentralBill().getContact().getId()),
+                        Environment.getInstance().getEmailMessageBody(),
                         new ArrayList<>(Collections.singletonList(new File(Environment.getInstance().emailOutBox() + documentName)))
                 )
-        ).send();
+        );
+
+        email.send();
     }
 
     private void archiveDocument() throws Exception {

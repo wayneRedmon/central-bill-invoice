@@ -29,12 +29,6 @@ public class RemittanceSheet {
         sheet.setDisplayGridlines(false);
         sheet.setPrintGridlines(false);
 
-        //todo: fix this
-        //RemittanceSummaryRow.setSubtotal(
-        //        sheet,
-        //        centralBillInvoice.getCentralBill().getRemit().getContact().getId(),
-        //        centralBillInvoice.getCentralBill().getContact().getId()
-        //);
         RemitToRows.set(sheet, centralBillInvoice.getCentralBill().getRemit());
         BillToRows.set(sheet, centralBillInvoice.getCentralBill());
 

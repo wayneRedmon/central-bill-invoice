@@ -32,7 +32,8 @@ public class WorkbookEnvironment {
     private static XSSFCellStyle proportionalRightBold;
 
     private static XSSFCellStyle monospaceDefaultStyle;
-    private static XSSFCellStyle monospaceCenterStyle;
+    private static XSSFCellStyle monospaceDetailDateStyle;
+    private static XSSFCellStyle monospaceInstructionStyle;
     private static XSSFCellStyle monospaceTextRightStyle;
     private static XSSFCellStyle monospaceDoubleStyle;
     private static XSSFCellStyle monospaceIntegerStyle;
@@ -57,18 +58,16 @@ public class WorkbookEnvironment {
         return SingletonHelper.INSTANCE;
     }
 
-    public boolean init(XSSFWorkbook xssfWorkbook) {
-        this.xssfWorkbook = xssfWorkbook;
-
-        boolean ready = false;
+    public static void init(XSSFWorkbook xssfWorkbook) {
+        WorkbookEnvironment.xssfWorkbook = xssfWorkbook;
 
         setProportionalStyle();
         setMonospaceStyle();
-
-        return ready;
     }
 
-    public XSSFCellStyle getProportionalDefaultStyle() {return proportionalDefaultStyle;}
+    public XSSFCellStyle getProportionalDefaultStyle() {
+        return proportionalDefaultStyle;
+    }
 
     public XSSFCellStyle getProportionalCenterBold() {
         return proportionalCenterBold;
@@ -82,33 +81,65 @@ public class WorkbookEnvironment {
         return proportionalRightBold;
     }
 
-    public XSSFCellStyle getMonospaceDefaultStyle() {return monospaceDefaultStyle;}
+    public XSSFCellStyle getMonospaceDefaultStyle() {
+        return monospaceDefaultStyle;
+    }
 
-    public XSSFCellStyle getMonospaceCenterStyle() {return monospaceCenterStyle;}
+    public XSSFCellStyle getMonospaceDetailDateStyle() {
+        return monospaceDetailDateStyle;
+    }
 
-    public XSSFCellStyle getMonospaceTextRightStyle(){return monospaceTextRightStyle;}
+    public XSSFCellStyle getMonospaceInstructionStyle() {
+        return monospaceInstructionStyle;
+    }
 
-    public XSSFCellStyle getMonospaceDoubleStyle() {return monospaceDoubleStyle;}
+    public XSSFCellStyle getMonospaceTextRightStyle() {
+        return monospaceTextRightStyle;
+    }
 
-    public XSSFCellStyle getMonospaceIntegerStyle() {return monospaceIntegerStyle;}
+    public XSSFCellStyle getMonospaceDoubleStyle() {
+        return monospaceDoubleStyle;
+    }
 
-    public XSSFCellStyle getMonospacePriceStyle() {return monospacePriceStyle;}
+    public XSSFCellStyle getMonospaceIntegerStyle() {
+        return monospaceIntegerStyle;
+    }
 
-    public XSSFCellStyle getMonospacePromotionStyle() {return monospacePromotionStyle;}
+    public XSSFCellStyle getMonospacePriceStyle() {
+        return monospacePriceStyle;
+    }
 
-    public XSSFCellStyle getMonospaceCurrencyStyle() {return monospaceCurrencyStyle;}
+    public XSSFCellStyle getMonospacePromotionStyle() {
+        return monospacePromotionStyle;
+    }
 
-    public XSSFCellStyle getMonospaceTotalDoubleStyle() {return monospaceTotalDoubleStyle;}
+    public XSSFCellStyle getMonospaceCurrencyStyle() {
+        return monospaceCurrencyStyle;
+    }
 
-    public XSSFCellStyle getMonospaceSubtotalDoubleStyle() {return monospaceSubtotalDoubleStyle;}
+    public XSSFCellStyle getMonospaceTotalDoubleStyle() {
+        return monospaceTotalDoubleStyle;
+    }
 
-    public XSSFCellStyle getMonospaceTotalIntegerStyle() {return monospaceTotalIntegerStyle;}
+    public XSSFCellStyle getMonospaceSubtotalDoubleStyle() {
+        return monospaceSubtotalDoubleStyle;
+    }
 
-    public XSSFCellStyle getMonospaceSubtotalIntegerStyle() {return monospaceSubtotalIntegerStyle;}
+    public XSSFCellStyle getMonospaceTotalIntegerStyle() {
+        return monospaceTotalIntegerStyle;
+    }
 
-    public XSSFCellStyle getMonospaceTotalCurrencyStyle() {return monospaceTotalCurrencyStyle;}
+    public XSSFCellStyle getMonospaceSubtotalIntegerStyle() {
+        return monospaceSubtotalIntegerStyle;
+    }
 
-    public XSSFCellStyle getMonospaceSubtotalCurrencyStyle() {return monospaceSubtotalCurrencyStyle;}
+    public XSSFCellStyle getMonospaceTotalCurrencyStyle() {
+        return monospaceTotalCurrencyStyle;
+    }
+
+    public XSSFCellStyle getMonospaceSubtotalCurrencyStyle() {
+        return monospaceSubtotalCurrencyStyle;
+    }
 
     private static void setProportionalStyle() {
         XSSFFont proportionalFontNormal = xssfWorkbook.createFont();
@@ -181,9 +212,18 @@ public class WorkbookEnvironment {
         monospaceDefaultStyle.setBorderLeft(BorderStyle.THIN);
         monospaceDefaultStyle.setLeftBorderColor(IndexedColors.BLACK.getIndex());
 
-        monospaceCenterStyle = xssfWorkbook.createCellStyle();
-        monospaceCenterStyle.cloneStyleFrom(monospaceDefaultStyle);
-        monospaceCenterStyle.setAlignment(HorizontalAlignment.CENTER);
+        monospaceDetailDateStyle = xssfWorkbook.createCellStyle();
+        monospaceDetailDateStyle.cloneStyleFrom(monospaceDefaultStyle);
+        monospaceDetailDateStyle.setAlignment(HorizontalAlignment.CENTER);
+
+        monospaceInstructionStyle = xssfWorkbook.createCellStyle();
+        monospaceInstructionStyle.setFont(monospaceFontNormal);
+        monospaceInstructionStyle.setBorderBottom(BorderStyle.NONE);
+        monospaceInstructionStyle.setBorderTop(BorderStyle.NONE);
+        monospaceInstructionStyle.setBorderLeft(BorderStyle.NONE);
+        monospaceInstructionStyle.setBorderRight(BorderStyle.NONE);
+        monospaceInstructionStyle.setAlignment(HorizontalAlignment.CENTER);
+        monospaceInstructionStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
         monospaceTextRightStyle = xssfWorkbook.createCellStyle();
         monospaceTextRightStyle.cloneStyleFrom(monospaceDefaultStyle);

@@ -34,6 +34,6 @@ public class SalesRow {
         cell = row.getCell(6);
         cell.setCellType(CellType.STRING);
         cell.setCellStyle(WorkbookEnvironment.getInstance().getProportionalCenterBold());
-        cell.setCellValue("");//todo: add due by date
+        cell.setCellValue(customer.getDueByDate(invoice.getHeader().getDeliveryDate()));
     }
 }

@@ -26,11 +26,10 @@ import java.util.*;
 public class Environment {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Environment.class);
-
-    private static final String APPLICATION_PROPERTIES = "./prairiefarmsApplication.properties";
+    private static final String PATH_TO_APPLICATION_PROPERTIES = "./prairiefarmsApplication.properties";
+    private static final String PATH_TO_DAIRY_BUSINESS_FILE = "./dairyBusiness.csv";
     private static final String BILLING_TYPE = "invoice";
-    private static final String PATH_TO_DAIRY_BUSINESS_FILE = "./DairyBusiness.csv";
-    private static final String XLSX_TEMPLATE_PATH = "/templates/DistributorInvoice.xlsx";
+    private static final String XLSX_TEMPLATE_PATH = "templates/DistributorInvoice.xlsx";
 
     private static CommandLine commandLine;
     private static Credentials credentials;
@@ -144,6 +143,22 @@ public class Environment {
         return xlsxTemplate;
     }
 
+    public String getEmailSubject(int centralBillId) {
+        return "[" + String.format("%03d", dairyId) + "-" +
+                String.format("%03d", centralBillId) + "] " +
+                Environment.getInstance().frequencyAsText() + " invoices for " +
+                Environment.getInstance().billingDateAsUSA();
+    }
+
+    public StringBuilder getEmailMessageBody() {
+        return new StringBuilder()
+                .append("<p>Attached are your <b>")
+                .append(Environment.getInstance().frequencyAsText())
+                .append("</b> invoices for <b>")
+                .append(Environment.getInstance().billingDateAsUSA())
+                .append("</b>.<br><br><b><i>Thank you for your business!</i></b><br><br>");
+    }
+
     private static boolean setCredentials() {
         credentials = null;
 
@@ -245,7 +260,7 @@ public class Environment {
     private static boolean setEmailServer() {
         emailServer = "";
 
-        try (InputStream inputStream = Files.newInputStream(Paths.get(APPLICATION_PROPERTIES))) {
+        try (InputStream inputStream = Files.newInputStream(Paths.get(PATH_TO_APPLICATION_PROPERTIES))) {
             final Properties properties = new Properties();
 
             properties.load(inputStream);
