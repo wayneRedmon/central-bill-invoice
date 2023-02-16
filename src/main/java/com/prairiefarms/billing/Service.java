@@ -5,6 +5,7 @@ import com.prairiefarms.billing.centralBill.CentralBill;
 import com.prairiefarms.billing.centralBill.CentralBillDAO;
 import com.prairiefarms.billing.customer.Customer;
 import com.prairiefarms.billing.customer.CustomerDAO;
+import com.prairiefarms.billing.document.DocumentThread;
 import com.prairiefarms.billing.document.pdf.PdfService;
 import com.prairiefarms.billing.document.xlsx.XlsxService;
 import com.prairiefarms.billing.invoice.Header;
@@ -105,7 +106,7 @@ public class Service {
     }
 
     private void executeThreads() throws InterruptedException, ExecutionException {
-        Set<Callable<String>> callables = new HashSet<>();
+        Set<Callable<DocumentThread>> callables = new HashSet<>();
 
         for (CentralBillInvoice centralBillInvoice : centralBillInvoices) {
             if (DocumentType.S.fileExtension.equals(centralBillInvoice.getCentralBill().getDocumentType().fileExtension)) {
@@ -118,9 +119,24 @@ public class Service {
         if (ObjectUtils.isNotEmpty(callables)) {
             ExecutorService executorService = Executors.newFixedThreadPool(callables.size());
 
-            List<Future<String>> futures = executorService.invokeAll(callables);
+            List<Future<DocumentThread>> futures = executorService.invokeAll(callables);
 
-            for (Future<String> future : futures) LOGGER.info(future.get());
+            for (Future<DocumentThread> future : futures) {
+                if (ObjectUtils.isNotEmpty(future.get().getException())) {
+                    LOGGER.error(
+                            "\r\nException in Service.executeThreads() while processing " +
+                                    "[" + future.get().getCentralBill().getContact().getId() + "] " +
+                                    future.get().getCentralBill().getContact().getName(),
+                            future.get().getException() + "\r\n"
+                    );
+                } else {
+                    LOGGER.info(
+                            "[" + future.get().getCentralBill().getContact().getId() + "] " +
+                                    future.get().getCentralBill().getContact().getName() +
+                                    "   *** OK ***"
+                    );
+                }
+            }
 
             executorService.shutdown();
         }

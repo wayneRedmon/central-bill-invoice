@@ -5,6 +5,15 @@ import org.apache.poi.xssf.usermodel.*;
 
 public class WorkbookEnvironment {
 
+    public final float DEFAULT_ROW_HEIGHT_IN_POINTS = 18f;
+    public final int REMITTANCE_SHEET_TO_COPY = 0;
+    public final int REMITTANCE_ROW_TO_COPY = 13;
+    public final int ITEM_SUMMARY_SHEET_TO_COPY = 1;
+    public final int ITEM_SUMMARY_ROW_TO_COPY = 13;
+    public final int INVOICE_SHEET_TO_COPY = 2;
+    public final int INVOICE_ROW_TO_COPY = 16;
+    public final CellCopyPolicy CELL_COPY_POLICY = new CellCopyPolicy.Builder().mergedRegions(true).cellFormula(false).cellStyle(false).cellValue(false).build();
+
     private static final String DOUBLE_VALUE_FORMAT = "_(* #,##0.00_);[RED]_(* \\(#,##0.00\\);_(* -??_);_(@_)";
     private static final String CURRENCY_VALUE_FORMAT = "_(* $#,##0.00_);[RED]_(* \\($#,##0.00\\);_(* -??_);_(@_)";
     private static final String INTEGER_VALUE_FORMAT = "_(* #,##0_);[RED]_(* \\(#,##0\\);_(* -??_);_(@_)";

@@ -6,13 +6,9 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-public class LaunchParams {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(LaunchParams.class);
+public class ApplicationCommandLine {
 
     private static final Options CLI_OPTIONS = new Options()
             .addRequiredOption(null, "username", true, "jdbc username")
@@ -23,46 +19,33 @@ public class LaunchParams {
             .addRequiredOption(null, "frequency", true, "frequency")
             .addRequiredOption(null, "date", true, "billing date");
 
-    private final String[] args;
+    private final CommandLine commandLine;
 
-    private CommandLine commandLine;
+    private static StringBuilder cliOptionsAsText;
 
-    public LaunchParams(String[] args) {
-        this.args = args;
-        this.setCommandLine();
-    }
+    public ApplicationCommandLine(String[] args) throws Exception {
+        this.commandLine = new DefaultParser().parse(CLI_OPTIONS, args);
 
-    private void setCommandLine() {
-        try {
-            commandLine = new DefaultParser().parse(CLI_OPTIONS, args);
+        MDC.put("dairyId", commandLine.getOptionValue("dairy"));
 
-            MDC.put("dairyId", commandLine.getOptionValue("dairy"));
-
-            this.listOptions();
-        } catch (Exception exception) {
-            LOGGER.error("Exception in LaunchParams.setCommandLine()", exception);
-        }
-    }
-
-    private void listOptions() {
         if (ObjectUtils.isNotEmpty(commandLine)) {
-            StringBuilder cliOptions = new StringBuilder()
+            cliOptionsAsText = new StringBuilder()
                     .append("\r\ncentral-billing-invoice started with the following CLI options:")
                     .append("\r\n")
                     .append(StringUtils.repeat("=", 125))
                     .append("\r\n");
 
             for (Option option : commandLine.getOptions())
-                cliOptions.append("-")
+                cliOptionsAsText
+                        .append("-")
                         .append(option.getLongOpt())
                         .append(" ")
                         .append(option.getLongOpt().equalsIgnoreCase("password") ? "<********> " : option.getValue() + " ");
 
-            cliOptions.append("\r\n")
+            cliOptionsAsText
+                    .append("\r\n")
                     .append(StringUtils.repeat("-", 125))
                     .append("\r\n");
-
-            LOGGER.info(cliOptions.toString());
         }
     }
 
@@ -70,7 +53,7 @@ public class LaunchParams {
         return commandLine;
     }
 
-    public boolean isValid() {
-        return ObjectUtils.isNotEmpty(commandLine);
+    public String getCLIOptionsAsText() {
+        return cliOptionsAsText.toString();
     }
 }

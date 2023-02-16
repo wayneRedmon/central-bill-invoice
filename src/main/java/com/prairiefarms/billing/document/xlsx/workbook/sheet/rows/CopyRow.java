@@ -1,6 +1,6 @@
 package com.prairiefarms.billing.document.xlsx.workbook.sheet.rows;
 
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.SheetControl;
+import com.prairiefarms.billing.document.xlsx.workbook.WorkbookEnvironment;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 public class CopyRow {
@@ -18,7 +18,7 @@ public class CopyRow {
                 rowToCopy,
                 rowToCopy,
                 rowToInsert,
-                SheetControl.CELL_COPY_POLICY
+                WorkbookEnvironment.getInstance().CELL_COPY_POLICY
         );
     }
 }

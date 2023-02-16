@@ -2,9 +2,9 @@ package com.prairiefarms.billing.document.xlsx.workbook.sheet;
 
 import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.customer.Customer;
+import com.prairiefarms.billing.document.xlsx.workbook.WorkbookEnvironment;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.*;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceDateCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.CopyRow;
 import com.prairiefarms.billing.invoice.Invoice;
 import com.prairiefarms.billing.invoice.centralBill.CentralBillInvoice;
 import com.prairiefarms.billing.invoice.centralBill.customer.CustomerInvoice;
@@ -14,7 +14,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.time.format.DateTimeFormatter;
 
-public class InvoiceSheet extends SheetControl {
+public class InvoiceSheet {
 
     private final XSSFWorkbook workbook;
 
@@ -25,8 +25,8 @@ public class InvoiceSheet extends SheetControl {
     public void generate(CentralBillInvoice centralBillInvoice) {
         for (CustomerInvoice customerInvoice : centralBillInvoice.getCustomerInvoices()) {
             for (Invoice invoice : customerInvoice.getInvoices()) {
-                XSSFSheet sheet = workbook.cloneSheet(INVOICE_SHEET_TO_COPY);
-                sheet.setDefaultRowHeightInPoints(DEFAULT_ROW_HEIGHT_IN_POINTS);
+                XSSFSheet sheet = workbook.cloneSheet(WorkbookEnvironment.getInstance().INVOICE_SHEET_TO_COPY);
+                sheet.setDefaultRowHeightInPoints(WorkbookEnvironment.getInstance().DEFAULT_ROW_HEIGHT_IN_POINTS);
                 sheet.setDisplayGridlines(false);
                 sheet.setPrintGridlines(false);
                 sheet.getWorkbook().setSheetName(sheet.getWorkbook().getSheetIndex(sheet), setSheetName(customerInvoice.getCustomer(), invoice));
@@ -45,16 +45,23 @@ public class InvoiceSheet extends SheetControl {
 
                 double invoiceSubtotal = 0D;
 
-                int rowNumber = INVOICE_ROW_TO_COPY;
+                int rowNumber = WorkbookEnvironment.getInstance().INVOICE_ROW_TO_COPY;
 
                 for (Item item : invoice.getItems()) {
                     rowNumber++;
 
-                    CopyRow.set(sheet, rowNumber, INVOICE_ROW_TO_COPY);
+                    CopyRow.set(sheet, rowNumber, WorkbookEnvironment.getInstance().INVOICE_ROW_TO_COPY);
                     ItemDetailRow.set(sheet, rowNumber, item);
                     invoiceSubtotal += item.getExtension();
 
-                    ItemDetailRow.set(sheet, INVOICE_ROW_TO_COPY, rowNumber, invoiceSubtotal, centralBillInvoice.getCentralBill(), customerInvoice.getCustomer(), invoice.getAppliedAmount());
+                    ItemDetailRow.set(
+                            sheet,
+                            WorkbookEnvironment.getInstance().INVOICE_ROW_TO_COPY,
+                            rowNumber, invoiceSubtotal,
+                            centralBillInvoice.getCentralBill(),
+                            customerInvoice.getCustomer(),
+                            invoice.getAppliedAmount()
+                    );
 
                     if (invoice.getHeader().isDistributor()) {
                         DeliveryItemDetailRows.set(sheet, rowNumber, item);

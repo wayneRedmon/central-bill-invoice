@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+<configuration>x
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
 
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -8,22 +8,24 @@
         </encoder>
     </appender>
 
-    <property name="LOGS_DIR" value="./logs/"/>
+    <property name="LOGS_DIR" value="./logs"/>
     <property name="LOGS_ARCHIVE_DIR" value="./logs/archive"/>
     <property name="FILE_NAME" value="central-bill-invoice_"/>
-    <appender name="appLogAppender" class="ch.qos.logback.classic.sift.SiftingAppender">
+
+    <appender name="appLogger" class="ch.qos.logback.classic.sift.SiftingAppender">
         <discriminator>
             <key>dairyId</key>
             <defaultValue>unknown</defaultValue>
         </discriminator>
+
         <sift>
-            <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <appender name="appLogger-${dairyId}" class="ch.qos.logback.core.rolling.RollingFileAppender">
                 <file>${LOGS_DIR}/${FILE_NAME}${dairyId}.log</file>
                 <encoder>
                     <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
                 </encoder>
-                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                    <fileNamePattern>${LOGS_ARCHIVE_DIR}/${FILE_NAME}${dairyId}.%d{yyyy-MM-dd}_%d{HHmmss}.%i.log</fileNamePattern>
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                    <fileNamePattern>${LOGS_ARCHIVE_DIR}/${FILE_NAME}${dairyId}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
                     <TimeBasedFileNamingAndTriggeringPolicy class="com.prairiefarms.utils.logging.StartupSizeTimeBasedTriggeringPolicy">
                         <MaxFileSize>250MB</MaxFileSize>
                     </TimeBasedFileNamingAndTriggeringPolicy>
@@ -35,6 +37,6 @@
 
     <root level="INFO">
         <appender-ref ref="console"/>
-        <appender-ref ref="appLogAppender"/>
+        <appender-ref ref="appLogger"/>
     </root>
 </configuration>
