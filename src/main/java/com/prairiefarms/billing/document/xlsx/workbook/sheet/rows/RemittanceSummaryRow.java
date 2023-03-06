@@ -1,119 +1,129 @@
 package com.prairiefarms.billing.document.xlsx.workbook.sheet.rows;
 
-import com.prairiefarms.billing.customer.Customer;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.CentralBillAccountCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.CustomerInvoiceCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.CustomerInvoiceNameCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.DeliveryDateCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.InvoiceDueByCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.subTotal.*;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.total.CustomerExtensionTotalCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.total.CustomerPointsTotalCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.customerRemittance.total.CustomerQuantityTotalCell;
+import com.prairiefarms.billing.Environment;
+import com.prairiefarms.billing.document.xlsx.workbook.WorkbookEnvironment;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.BillToAccountCell;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.instruction.InstructionCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceDateCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.item.ItemExtensionCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.item.ItemPointsCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.item.ItemQuantityCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.remit.RemitNameCell;
+import com.prairiefarms.billing.utils.Contact;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.RegionUtil;
 import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RemittanceSummaryRow {
 
-    public static void set(XSSFSheet sheet, int remitId, int customerId) {
-        InvoiceDateCell.set(sheet);
-        CentralBillAccountCell.set(sheet, remitId, customerId);
-        RemitNameCell.set(sheet);
+    private final XSSFSheet xssfSheet;
+
+    private final List<String> pointsSubtotalCellReferences = new ArrayList<>();
+    private final List<String> quantitySubtotalCellReferences = new ArrayList<>();
+    private final List<String> amountDueSubtotalCellReferences = new ArrayList<>();
+
+    public RemittanceSummaryRow(XSSFSheet xssfSheet) {
+        this.xssfSheet = xssfSheet;
     }
 
-    public static void set(XSSFSheet sheet, int rowNumber, LocalDate deliveryDate, Customer customer, int invoiceNumber, double points, int quantity, double subTotal) {
-        for (int column = 0; column < sheet.getRow(rowNumber).getLastCellNum(); column++) {
-            switch (column) {
-                case 0:
-                    CustomerInvoiceNameCell.set(sheet, rowNumber, column, customer.getContact().getId(), customer.getContact().getName());
-                    break;
-                case 3:
-                    CustomerInvoiceCell.set(sheet, rowNumber, column, invoiceNumber);
-                    break;
-                case 4:
-                    DeliveryDateCell.set(sheet, rowNumber, column, deliveryDate);
-                    break;
-                case 5:
-                    ItemPointsCell.set(sheet, rowNumber, column, points);
-                    break;
-                case 6:
-                    ItemQuantityCell.set(sheet, rowNumber, column, quantity);
-                    break;
-                case 7:
-                    ItemExtensionCell.set(sheet, rowNumber, column, subTotal);
-                    break;
-                case 8:
-                    InvoiceDueByCell.set(sheet, rowNumber, column, customer.getDueByDate(deliveryDate));
-                    break;
-            }
-        }
+    public void set(int billToId) {
+        InvoiceDateCell.set(xssfSheet);
+        BillToAccountCell.set(xssfSheet, Environment.getInstance().getDairyId(), billToId);
+        InstructionCell.set(xssfSheet);
     }
 
-    public static void setSubtotal(XSSFSheet sheet, int startingRowNumber, int endingRowNumber) {
-        for (int column = 0; column < sheet.getRow(endingRowNumber + 1).getLastCellNum(); column++) {
-            switch (column) {
-                case 0:
-                case 1:
-                case 2:
-                case 3:
-                case 8:
-                    CustomerProportionalEmptyCell.set(sheet, endingRowNumber + 1, column);
-                    break;
-                case 4:
-                    CustomerSubTotalCell.set(sheet, endingRowNumber + 1, column);
-                    break;
-                case 5:
-                    CustomerPointsSubTotalCell.set(sheet, endingRowNumber + 1, column, startingRowNumber, endingRowNumber);
-                    break;
-                case 6:
-                    CustomerQuantitySubTotalCell.set(sheet, endingRowNumber + 1, column, startingRowNumber, endingRowNumber);
-                    break;
-                case 7:
-                    CustomerExtensionSubTotalCell.set(sheet, endingRowNumber + 1, column, startingRowNumber, endingRowNumber);
-                    break;
-                default:
-                    break;
-            }
-        }
+    public void setCustomerColumn(int rowNumber, Contact contact) {
+        XSSFCell cell = xssfSheet.getRow(rowNumber).getCell(0);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getCustomerColumnStyle());
+        cell.setCellType(CellType.STRING);
+        cell.setCellValue("[" + String.format("%1$5s", contact.getId()) + "] " + contact.getName());
+
+        CellRangeAddress cellRangeAddress = new CellRangeAddress(rowNumber, rowNumber, 0, 2);
+        RegionUtil.setBorderLeft(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        RegionUtil.setBorderRight(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        RegionUtil.setBorderTop(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        RegionUtil.setBorderBottom(BorderStyle.THIN, cellRangeAddress, xssfSheet);
     }
 
-    public static void setTotal(XSSFSheet sheet, int startingRowNumber, int endingRowNumber) {
-        String totalPointsFormula = "";
-        String totalQuantityFormula = "";
-        String totalExtensionFormula = "";
+    public void set(int rowNumber,
+                    LocalDate deliveryDate,
+                    LocalDate dueByDate,
+                    int invoiceId,
+                    double points,
+                    int quantity,
+                    double subTotal) {
+        XSSFCell cell = xssfSheet.getRow(rowNumber).getCell(3);
+        cell.setCellType(CellType.STRING);
+        cell.setCellValue(invoiceId);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getInvoiceColumnStyle());
 
-        for (int thisRow = startingRowNumber; thisRow <= endingRowNumber; thisRow++) {
-            XSSFRow row = sheet.getRow(thisRow);
+        cell = xssfSheet.getRow(rowNumber).getCell(4);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getDeliveryDateColumnStyle());
+        cell.setCellType(CellType.STRING);
+        cell.setCellValue(deliveryDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
 
-            for (int column = 0; column < row.getLastCellNum(); column++) {
-                XSSFCell cell = row.getCell(column);
+        cell = xssfSheet.getRow(rowNumber).getCell(5);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getPointsColumnStyle());
+        cell.setCellType(CellType.NUMERIC);
+        cell.setCellValue(points);
 
-                if (cell.getCellType() == CellType.STRING) {
-                    if (cell.getStringCellValue().trim().equalsIgnoreCase("Subtotal")) {
-                        int totalRow = thisRow + 1;
-                        totalPointsFormula = (totalPointsFormula.trim().equals("")) ? ("F" + totalRow) : (totalPointsFormula.trim() + " + F" + totalRow);
-                        totalQuantityFormula = (totalQuantityFormula.trim().equals("")) ? ("G" + totalRow) : (totalQuantityFormula.trim() + " + G" + totalRow);
-                        totalExtensionFormula = (totalExtensionFormula.trim().equals("")) ? ("H" + totalRow) : (totalExtensionFormula.trim() + " + H" + totalRow);
+        cell = xssfSheet.getRow(rowNumber).getCell(6);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getQuantityColumnStyle());
+        cell.setCellType(CellType.NUMERIC);
+        cell.setCellValue(quantity);
 
-                        break;
-                    }
-                }
-            }
-        }
+        cell = xssfSheet.getRow(rowNumber).getCell(7);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getTotalColumnStyle());
+        cell.setCellType(CellType.NUMERIC);
+        cell.setCellValue(subTotal);
 
-        endingRowNumber++;
+        cell = xssfSheet.getRow(rowNumber).getCell(8);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getDueByDateColumnStyle());
+        cell.setCellType(CellType.STRING);
+        cell.setCellValue(dueByDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+    }
 
-        CustomerPointsTotalCell.set(sheet, endingRowNumber, totalPointsFormula);
-        CustomerQuantityTotalCell.set(sheet, endingRowNumber, totalQuantityFormula);
-        CustomerExtensionTotalCell.set(sheet, endingRowNumber, totalExtensionFormula);
+    public void setCustomerTotal(int rowNumber,
+                                 int startingCanonicalRow,
+                                 int endingCanonicalRow) {
+        XSSFCell cell = xssfSheet.getRow(rowNumber).getCell(5);
+        cell.removeFormula();
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getPointsSubtotalStyle());
+        cell.setCellFormula("SUM(F" + startingCanonicalRow + ":F" + endingCanonicalRow + ")");
+        pointsSubtotalCellReferences.add(cell.getReference());
+
+        cell = xssfSheet.getRow(rowNumber).getCell(6);
+        cell.removeFormula();
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getQuantitySubtotalStyle());
+        cell.setCellFormula("SUM(G" + startingCanonicalRow + ":G" + endingCanonicalRow + ")");
+        quantitySubtotalCellReferences.add(cell.getReference());
+
+        cell = xssfSheet.getRow(rowNumber).getCell(7);
+        cell.removeFormula();
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getAmountDueSubtotalStyle());
+        cell.setCellFormula("SUM(H" + startingCanonicalRow + ":H" + endingCanonicalRow + ")");
+        amountDueSubtotalCellReferences.add(cell.getReference());
+    }
+
+    public void setTotal(int rowNumber) {
+        XSSFCell cell = xssfSheet.getRow(rowNumber).getCell(5);
+        cell.removeFormula();
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getPointsTotalStyle());
+        cell.setCellFormula(StringUtils.join(pointsSubtotalCellReferences, "+"));
+
+        cell = xssfSheet.getRow(rowNumber).getCell(6);
+        cell.removeFormula();
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getQuantityTotalStyle());
+        cell.setCellFormula(StringUtils.join(quantitySubtotalCellReferences, "+"));
+
+        cell = xssfSheet.getRow(rowNumber).getCell(7);
+        cell.removeFormula();
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getAmountDueTotalStyle());
+        cell.setCellFormula(StringUtils.join(amountDueSubtotalCellReferences, "+"));
     }
 }

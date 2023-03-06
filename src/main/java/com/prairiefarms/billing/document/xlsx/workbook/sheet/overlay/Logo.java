@@ -23,6 +23,7 @@ public class Logo {
         final int DOCUMENT_STATIC_SHEETS = 3;
 
         FileInputStream logoFile = null;
+
         int logoIndex = 0;
 
         for (int sheetIndex = 0; sheetIndex < DOCUMENT_STATIC_SHEETS; sheetIndex++) {

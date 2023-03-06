@@ -1,5 +1,6 @@
 package com.prairiefarms.billing.document.xlsx.workbook.sheet.rows;
 
+import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.centralBill.CentralBill;
 import com.prairiefarms.billing.customer.Customer;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.deliverInvoice.*;
@@ -7,14 +8,12 @@ import com.prairiefarms.billing.invoice.Invoice;
 import com.prairiefarms.billing.utils.Contact;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
-import java.time.format.DateTimeFormatter;
-
 public class DeliverToRows {
 
     public static void set(XSSFSheet sheet, CentralBill centralBill, Customer customer, Invoice invoice) {
         DeliveryDateCell.set(sheet, invoice.getHeader().getDeliveryDate());
         DeliveryTicketCell.set(sheet, invoice.getHeader().getId());
-        DeliveryAccountCell.set(sheet, centralBill.getRemit().getContact().getId(), centralBill.getContact().getId(), customer.getContact().getId());
+        DeliveryAccountCell.set(sheet, Environment.getInstance().getDairyId(), centralBill.getContact().getId(), customer.getContact().getId());
     }
 
     public static void set(XSSFSheet sheet, Contact contact, Invoice invoice) {
@@ -22,6 +21,5 @@ public class DeliverToRows {
         DeliveryStreetCell.set(sheet, contact.getStreet());
         DeliveryAddressCell.set(sheet, contact.getAddress());
         DeliveryPhoneNumberCell.set(sheet, contact.getPhone());
-        DeliveryByCell.set(sheet, invoice.getHeader().getDeliveryDate().format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
     }
 }

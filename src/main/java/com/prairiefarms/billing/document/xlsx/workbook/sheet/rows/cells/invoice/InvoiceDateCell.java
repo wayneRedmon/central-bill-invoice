@@ -11,7 +11,7 @@ public class InvoiceDateCell {
     public static void set(XSSFSheet sheet) {
         XSSFCell cell = sheet.getRow(1).getCell(6);
         cell.setCellType(CellType.STRING);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getProportionalCenterBackground());
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getPageInformationStyle());
         cell.setCellValue(Environment.getInstance().billingDateAsUSA());
     }
 }

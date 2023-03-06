@@ -18,11 +18,11 @@ public class SalesRow {
         XSSFCell cell = sheet.getRow(14).getCell(0);
         cell.setCellType(CellType.STRING);
         cell.setCellStyle(WorkbookEnvironment.getInstance().getProportionalCenterBold());
-        cell.setCellValue(customer.getSalesperson());
+        cell.setCellValue(invoice.getHeader().getPurchaseOrder());
         cell = row.getCell(2);
         cell.setCellType(CellType.STRING);
         cell.setCellStyle(WorkbookEnvironment.getInstance().getProportionalCenterBold());
-        cell.setCellValue(invoice.getHeader().getPurchaseOrder());
+        cell.setCellValue(customer.getSalesperson());
         cell = row.getCell(3);
         cell.setCellType(CellType.STRING);
         cell.setCellStyle(WorkbookEnvironment.getInstance().getProportionalCenterBold());
@@ -34,6 +34,6 @@ public class SalesRow {
         cell = row.getCell(6);
         cell.setCellType(CellType.STRING);
         cell.setCellStyle(WorkbookEnvironment.getInstance().getProportionalCenterBold());
-        cell.setCellValue(customer.getDueByDate(invoice.getHeader().getDeliveryDate()));
+        cell.setCellValue(customer.getDueByDate(invoice.getHeader().getDeliveryDate()).format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
     }
 }

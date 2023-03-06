@@ -3,16 +3,15 @@ package com.prairiefarms.billing.document.xlsx.workbook.sheet;
 import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.document.xlsx.workbook.WorkbookEnvironment;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.*;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.ShipToAccountCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceDateCell;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceNumberCell;
 import com.prairiefarms.billing.invoice.Invoice;
 import com.prairiefarms.billing.invoice.centralBill.CentralBillInvoice;
 import com.prairiefarms.billing.invoice.centralBill.customer.CustomerInvoice;
 import com.prairiefarms.billing.invoice.item.Item;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 public class InvoiceSheet {
 
@@ -25,28 +24,31 @@ public class InvoiceSheet {
     public void generate(CentralBillInvoice centralBillInvoice) {
         for (CustomerInvoice customerInvoice : centralBillInvoice.getCustomerInvoices()) {
             for (Invoice invoice : customerInvoice.getInvoices()) {
-                XSSFSheet sheet = xssfWorkbook.cloneSheet(
+                XSSFSheet xssfSheet = xssfWorkbook.cloneSheet(
                         WorkbookEnvironment.getInstance().INVOICE_SHEET_TO_COPY,
-                        getSheetName(
-                                customerInvoice.getCustomer().isExtendedInvoiceId() ? invoice.getHeader().getExtendedId() : String.valueOf(invoice.getHeader().getId()),
-                                invoice.getHeader().getDeliveryDate()
-                        )
+                        getSheetName(customerInvoice.getCustomer().isExtendedInvoiceId() ? invoice.getHeader().getExtendedId() : String.valueOf(invoice.getHeader().getId()))
                 );
 
-                sheet.setDefaultRowHeightInPoints(WorkbookEnvironment.getInstance().DEFAULT_ROW_HEIGHT_IN_POINTS);
-                sheet.setDisplayGridlines(false);
-                sheet.setPrintGridlines(false);
+                xssfSheet.setDefaultRowHeightInPoints(WorkbookEnvironment.getInstance().DEFAULT_ROW_HEIGHT_IN_POINTS);
+                xssfSheet.setDisplayGridlines(false);
+                xssfSheet.setPrintGridlines(false);
 
-                InvoiceDateCell.set(sheet);
-                ItemDetailRow.set(sheet, centralBillInvoice.getCentralBill().getRemit().getContact().getId(), invoice.getHeader().getId(), centralBillInvoice.getCentralBill().getContact().getId(), customerInvoice.getCustomer().getContact().getId());
-                RemitToRows.set(sheet, centralBillInvoice.getCentralBill().getRemit());
-                BillToRows.set(sheet, centralBillInvoice.getCentralBill());
-                ShipToRows.set(sheet, customerInvoice.getCustomer());
-                SalesRow.set(sheet, customerInvoice.getCustomer(), invoice);
+                RemitToRows.set(xssfSheet, centralBillInvoice.getCentralBill().getRemit());
+                InvoiceDateCell.set(xssfSheet);
+                InvoiceNumberCell.set(xssfSheet, invoice.getHeader().getId());
+                ShipToAccountCell.set(
+                        xssfSheet,
+                        Environment.getInstance().getDairyId(),
+                        centralBillInvoice.getCentralBill().getContact().getId(),
+                        customerInvoice.getCustomer().getContact().getId()
+                );
+                BillToRows.set(xssfSheet, centralBillInvoice.getCentralBill().getContact());
+                ShipToRows.set(xssfSheet, customerInvoice.getCustomer());
+                SalesRow.set(xssfSheet, customerInvoice.getCustomer(), invoice);
 
                 if (invoice.getHeader().isDistributor()) {
-                    DeliverToRows.set(sheet, centralBillInvoice.getCentralBill(), customerInvoice.getCustomer(), invoice);
-                    DeliverToRows.set(sheet, customerInvoice.getCustomer().getContact(), invoice);
+                    DeliverToRows.set(xssfSheet, centralBillInvoice.getCentralBill(), customerInvoice.getCustomer(), invoice);
+                    DeliverToRows.set(xssfSheet, customerInvoice.getCustomer().getContact(), invoice);
                 }
 
                 double invoiceSubtotal = 0D;
@@ -56,12 +58,12 @@ public class InvoiceSheet {
                 for (Item item : invoice.getItems()) {
                     rowNumber++;
 
-                    CopyRow.set(sheet, rowNumber, WorkbookEnvironment.getInstance().INVOICE_ROW_TO_COPY);
-                    ItemDetailRow.set(sheet, rowNumber, item);
+                    CopyRow.set(xssfSheet, rowNumber, WorkbookEnvironment.getInstance().INVOICE_ROW_TO_COPY);
+                    ItemDetailRow.set(xssfSheet, rowNumber, item);
                     invoiceSubtotal += item.getExtension();
 
                     ItemDetailRow.set(
-                            sheet,
+                            xssfSheet,
                             WorkbookEnvironment.getInstance().INVOICE_ROW_TO_COPY,
                             rowNumber, invoiceSubtotal,
                             centralBillInvoice.getCentralBill(),
@@ -70,20 +72,17 @@ public class InvoiceSheet {
                     );
 
                     if (invoice.getHeader().isDistributor()) {
-                        DeliveryItemDetailRows.set(sheet, rowNumber, item);
+                        DeliveryItemDetailRows.set(xssfSheet, rowNumber, item);
                     }
                 }
 
-                sheet.protectSheet(Environment.getInstance().getXlsxDocumentPassword());
+                xssfSheet.protectSheet(Environment.getInstance().getXlsxDocumentPassword());
             }
         }
     }
 
-    private String getSheetName(String invoiceIdAsText, LocalDate deliveryDate) {
-        String sheetName = "Invoice #" +
-                invoiceIdAsText +
-                "_" +
-                deliveryDate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    private String getSheetName(String invoiceIdAsText) {
+        String sheetName = "Invoice #" + invoiceIdAsText;
 
         char suffix = 'A';
 

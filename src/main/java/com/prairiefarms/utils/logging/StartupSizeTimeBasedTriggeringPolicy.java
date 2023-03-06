@@ -6,7 +6,7 @@ import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
 import java.io.File;
 
 @NoAutoStart
- class StartupSizeTimeBasedTriggeringPolicy<E> extends SizeAndTimeBasedFNATP<E> {
+public class StartupSizeTimeBasedTriggeringPolicy<E> extends SizeAndTimeBasedFNATP<E> {
 
     private boolean started = false;
 
@@ -14,7 +14,6 @@ import java.io.File;
     public boolean isTriggeringEvent(File activeFile, E event) {
         if (!started) {
             nextCheck = 0L;
-
             return started = true;
         } else {
             return super.isTriggeringEvent(activeFile, event);

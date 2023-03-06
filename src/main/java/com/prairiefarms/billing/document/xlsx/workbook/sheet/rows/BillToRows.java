@@ -1,18 +1,27 @@
 package com.prairiefarms.billing.document.xlsx.workbook.sheet.rows;
 
-import com.prairiefarms.billing.centralBill.CentralBill;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.CentralBillAddressCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.CentralBillNameCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.CentralBillPhoneNumberCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.CentralBillStreetCell;
+import com.prairiefarms.billing.document.xlsx.workbook.WorkbookEnvironment;
+import com.prairiefarms.billing.utils.Contact;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 public class BillToRows {
 
-    public static void set(XSSFSheet sheet, CentralBill centralBill) {
-        CentralBillNameCell.set(sheet, centralBill.getContact().getName());
-        CentralBillStreetCell.set(sheet, centralBill.getContact().getStreet());
-        CentralBillAddressCell.set(sheet, centralBill.getContact().getAddress());
-        CentralBillPhoneNumberCell.set(sheet, centralBill.getContact().getPhone());
+    public static void set(XSSFSheet sheet, Contact contact) {
+        XSSFCell xssfCell = sheet.getRow(8).getCell(0);
+        xssfCell.setCellStyle(WorkbookEnvironment.getInstance().getContactStyle());
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue(contact.getName());
+
+        xssfCell = sheet.getRow(9).getCell(0);
+        xssfCell.setCellStyle(WorkbookEnvironment.getInstance().getContactStyle());
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue(contact.getStreet());
+
+        xssfCell = sheet.getRow(10).getCell(0);
+        xssfCell.setCellStyle(WorkbookEnvironment.getInstance().getContactStyle());
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue(contact.getAddress());
     }
 }

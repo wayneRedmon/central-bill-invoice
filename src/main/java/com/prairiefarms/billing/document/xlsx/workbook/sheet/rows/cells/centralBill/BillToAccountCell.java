@@ -5,12 +5,12 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
-public class CentralBillNameCell {
+public class BillToAccountCell {
 
-    public static void set(XSSFSheet sheet, String name) {
-        XSSFCell cell = sheet.getRow(8).getCell(0);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getProportionalDefaultStyle());
+    public static void set(XSSFSheet sheet, int dairyId, int billToId) {
+        XSSFCell cell = sheet.getRow(2).getCell(6);
         cell.setCellType(CellType.STRING);
-        cell.setCellValue(name);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getPageInformationStyle());
+        cell.setCellValue(String.format("%03d", dairyId) + "-" + String.format("%03d", billToId));
     }
 }

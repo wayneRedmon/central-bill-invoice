@@ -3,7 +3,6 @@ package com.prairiefarms.billing.document.xlsx;
 import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.document.DocumentThread;
 import com.prairiefarms.billing.document.ItemSort;
-import com.prairiefarms.billing.document.xlsx.workbook.WorkbookEnvironment;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.InvoiceSheet;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.ItemSummarySheet;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.RemittanceSheet;
@@ -14,7 +13,6 @@ import com.prairiefarms.utils.email.Email;
 import com.prairiefarms.utils.email.Message;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.openxml4j.util.ZipSecureFile;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.File;
@@ -22,9 +20,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 public class XlsxService implements Callable<DocumentThread> {
+
+    private static final String XLSX_TEMPLATE_PATH = "templates/DistributorInvoice.xlsx";
 
     private final CentralBillInvoice centralBillInvoice;
 
@@ -43,6 +44,7 @@ public class XlsxService implements Callable<DocumentThread> {
             this.emailDocument();
             this.archiveDocument();
         } catch (Exception exception) {
+            exception.printStackTrace();
             threadException = exception;
         }
 
@@ -61,16 +63,12 @@ public class XlsxService implements Callable<DocumentThread> {
                 Environment.getInstance().billingDateAsYYMMD() +
                 StringUtils.normalizeSpace(centralBillInvoice.getCentralBill().getDocumentType().fileExtension);
 
-        ZipSecureFile.setMinInflateRatio(0);
-
-        try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(Environment.getInstance().getXlsxTemplate())) {
-            WorkbookEnvironment.init(xssfWorkbook);
-
+        try (XSSFWorkbook xssfWorkbook = new XSSFWorkbook(Objects.requireNonNull(XlsxService.class.getClassLoader().getResourceAsStream(XLSX_TEMPLATE_PATH)))) {
             new Logo(xssfWorkbook).stamp();
             new RemittanceSheet(xssfWorkbook).generate(centralBillInvoice);
             new ItemSummarySheet(xssfWorkbook).generate(
                     centralBillInvoice.getCentralBill(),
-                    ItemSort.sort(centralBillInvoice.getCustomerInvoices())
+                    new ItemSort(centralBillInvoice.getCustomerInvoices()).sort()
             );
             new InvoiceSheet(xssfWorkbook).generate(centralBillInvoice);
 

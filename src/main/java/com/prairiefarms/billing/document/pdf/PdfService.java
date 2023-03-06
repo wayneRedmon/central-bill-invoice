@@ -14,7 +14,6 @@ import com.prairiefarms.billing.document.pdf.pages.RemittancePage;
 import com.prairiefarms.billing.invoice.Invoice;
 import com.prairiefarms.billing.invoice.centralBill.CentralBillInvoice;
 import com.prairiefarms.billing.invoice.centralBill.customer.CustomerInvoice;
-import com.prairiefarms.billing.invoice.item.ItemSummary;
 import com.prairiefarms.billing.utils.FolderMaintenance;
 import com.prairiefarms.utils.email.Email;
 import com.prairiefarms.utils.email.Message;
@@ -24,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 public class PdfService implements Callable<DocumentThread> {
@@ -46,6 +44,7 @@ public class PdfService implements Callable<DocumentThread> {
             this.emailDocument();
             this.archiveDocument();
         } catch (Exception exception) {
+            exception.printStackTrace();
             threadException = exception;
         }
 
@@ -96,13 +95,11 @@ public class PdfService implements Callable<DocumentThread> {
                     }
                 }
 
-                List<ItemSummary> sortedItemSummaries = ItemSort.sort(centralBillInvoice.getCustomerInvoices());
-
                 final ItemSummaryPage itemSummaryPage = new ItemSummaryPage(
                         document,
                         centralBillInvoice.getCentralBill().getRemit().getContact(),
                         centralBillInvoice.getCentralBill().getContact(),
-                        sortedItemSummaries
+                        new ItemSort(centralBillInvoice.getCustomerInvoices()).sort()
                 );
 
                 itemSummaryPage.generate();

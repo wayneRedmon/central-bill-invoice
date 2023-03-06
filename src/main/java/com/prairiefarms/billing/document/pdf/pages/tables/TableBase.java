@@ -23,7 +23,7 @@ class TableBase {
     }
 
     public static PdfFont getFontBold() throws IOException {
-        return PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+        return PdfFontFactory.createFont(StandardFonts.HELVETICA);
     }
 
     public static PdfFont getItemFont() throws IOException {

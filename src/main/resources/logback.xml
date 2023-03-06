@@ -1,42 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>x
+<configuration>
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
-
-    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %msg%n</pattern>
-        </encoder>
-    </appender>
 
     <property name="LOGS_DIR" value="./logs"/>
     <property name="LOGS_ARCHIVE_DIR" value="./logs/archive"/>
-    <property name="FILE_NAME" value="central-bill-invoice_"/>
+    <property name="FILE_NAME" value="central-bill-invoice"/>
 
-    <appender name="appLogger" class="ch.qos.logback.classic.sift.SiftingAppender">
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{ISO8601} %-5level - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="applicationLogger" class="ch.qos.logback.classic.sift.SiftingAppender">
         <discriminator>
-            <key>dairyId</key>
-            <defaultValue>unknown</defaultValue>
+            <key>dairy</key>
+            <defaultValue>startup</defaultValue>
         </discriminator>
 
         <sift>
-            <appender name="appLogger-${dairyId}" class="ch.qos.logback.core.rolling.RollingFileAppender">
-                <file>${LOGS_DIR}/${FILE_NAME}${dairyId}.log</file>
+            <appender name="applicationLogger-${dairyId}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${LOGS_DIR}/${FILE_NAME}_${dairy}.log</file>
                 <encoder>
-                    <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+                    <pattern>%d{ISO8601} %-5level - %msg%n</pattern>
                 </encoder>
-                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-                    <fileNamePattern>${LOGS_ARCHIVE_DIR}/${FILE_NAME}${dairyId}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-                    <TimeBasedFileNamingAndTriggeringPolicy class="com.prairiefarms.utils.logging.StartupSizeTimeBasedTriggeringPolicy">
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <fileNamePattern>${LOGS_ARCHIVE_DIR}/${FILE_NAME}_${dairy}.%d{yyyy-MM-dd}_%d{HHmmss}.%i.log</fileNamePattern>
+                    <maxHistory>30</maxHistory>
+                    <TimeBasedFileNamingAndTriggeringPolicy
+                            class="com.prairiefarms.utils.logging.StartupSizeTimeBasedTriggeringPolicy">
                         <MaxFileSize>250MB</MaxFileSize>
                     </TimeBasedFileNamingAndTriggeringPolicy>
-                    <maxHistory>10</maxHistory>
                 </rollingPolicy>
             </appender>
         </sift>
     </appender>
 
-    <root level="INFO">
+    <root level="info">
         <appender-ref ref="console"/>
-        <appender-ref ref="appLogger"/>
+        <appender-ref ref="applicationLogger"/>
     </root>
 </configuration>

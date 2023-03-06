@@ -2,48 +2,60 @@ package com.prairiefarms.billing.document.xlsx.workbook.sheet.rows;
 
 import com.prairiefarms.billing.centralBill.CentralBill;
 import com.prairiefarms.billing.customer.Customer;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.CustomerAccountCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.*;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.item.*;
+import com.prairiefarms.billing.document.xlsx.workbook.WorkbookEnvironment;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceAppliedCell;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceDiscountCells;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceTaxCells;
+import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceTotalCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.item.totals.ItemTotalExtensionCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.item.totals.ItemTotalPointsCell;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.item.totals.ItemTotalQuantityCell;
 import com.prairiefarms.billing.invoice.item.Item;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.RegionUtil;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
-
-import java.math.BigDecimal;
 
 public class ItemDetailRow {
 
-    public static void set(XSSFSheet sheet, int remitId, int invoiceId, int centralBillId, int customerId) {
-        InvoiceDateCell.set(sheet);
-        InvoiceNumberCell.set(sheet, invoiceId);
-        CustomerAccountCell.set(sheet, remitId, centralBillId, customerId);
-    }
+    public static void set(XSSFSheet xssfSheet, int rowNumber, Item item) {
+        XSSFCell cell = xssfSheet.getRow(rowNumber).getCell(0);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getItemIdStyle());
+        cell.setCellType(CellType.NUMERIC);
+        cell.setCellValue(item.getSalesType().equals("A") ? String.valueOf(item.getId()) : item.getIdAsAccount());
 
-    public static void set(XSSFSheet sheet, int rowNumber, Item item) {
-        for (int column = 0; column < sheet.getRow(rowNumber).getLastCellNum(); column++) {
-            switch (column) {
-                case 0:
-                    ItemNumberCell.set(sheet, rowNumber, column, item.getId());
-                    break;
-                case 1:
-                    ItemDescriptionCell.set(sheet, rowNumber, column, item.getName());
-                    break;
-                case 3:
-                    ItemPointsCell.set(sheet, rowNumber, column, (BigDecimal.valueOf(item.getPointsEach()).multiply(new BigDecimal(item.getQuantity()))).doubleValue());
-                    break;
-                case 4:
-                    ItemQuantityCell.set(sheet, rowNumber, column, item.getQuantity());
-                    break;
-                case 5:
-                    ItemPriceCell.set(sheet, rowNumber, column, item.isPromotion(), item.getPriceEach());
-                    break;
-                case 6:
-                    ItemExtensionCell.set(sheet, rowNumber, column, item.getExtension());
-                    break;
-            }
-        }
+        cell = xssfSheet.getRow(rowNumber).getCell(1);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getItemNameStyle());
+        cell.setCellType(CellType.STRING);
+        cell.setCellValue(item.getName());
+
+        CellRangeAddress cellRangeAddress = new CellRangeAddress(rowNumber, rowNumber, 1, 2);
+        RegionUtil.setBorderLeft(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        RegionUtil.setBorderRight(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        RegionUtil.setBorderTop(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        RegionUtil.setBorderBottom(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+
+        cell = xssfSheet.getRow(rowNumber).getCell(3);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getPointsColumnStyle());
+        cell.setCellType(CellType.NUMERIC);
+        cell.setCellValue(item.getTotalPoints());
+
+        cell = xssfSheet.getRow(rowNumber).getCell(4);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getQuantityColumnStyle());
+        cell.setCellType(CellType.NUMERIC);
+        cell.setCellValue(item.getQuantity());
+
+        cell = xssfSheet.getRow(rowNumber).getCell(5);
+        cell.setCellStyle(item.isPromotion() ? WorkbookEnvironment.getInstance().getPromotionPriceStyle() : WorkbookEnvironment.getInstance().getPriceEachStyle());
+        cell.setCellType(CellType.NUMERIC);
+        cell.setCellValue(item.getPriceEach());
+
+        cell = xssfSheet.getRow(rowNumber).getCell(6);
+        cell.setCellStyle(WorkbookEnvironment.getInstance().getTotalColumnStyle());
+        cell.setCellType(CellType.NUMERIC);
+        cell.setCellValue(item.getExtension());
     }
 
     public static void set(XSSFSheet sheet, int startingRowNumber, int endingRowNumber, Double invoiceSubtotal, CentralBill centralBill, Customer customer, Double appliedAmount) {

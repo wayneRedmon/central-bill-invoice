@@ -44,8 +44,7 @@ public class Service {
 
         this.getCentralBillInvoices();
 
-        if (ObjectUtils.isNotEmpty(centralBillInvoices))
-            this.executeThreads();
+        if (ObjectUtils.isNotEmpty(centralBillInvoices)) this.executeThreads();
     }
 
     private void getCentralBillInvoices() throws SQLException {
@@ -125,20 +124,18 @@ public class Service {
                 if (ObjectUtils.isNotEmpty(future.get().getException())) {
                     LOGGER.error(
                             "\r\nException in Service.executeThreads() while processing " +
-                                    "[" + future.get().getCentralBill().getContact().getId() + "] " +
+                                    "[" + String.format("%03d",future.get().getCentralBill().getContact().getId()) + "] " +
                                     future.get().getCentralBill().getContact().getName(),
                             future.get().getException().getCause()
                     );
                 } else {
                     LOGGER.info(
-                            "[" + future.get().getCentralBill().getContact().getId() + "] " +
+                            "[" + String.format("%03d",future.get().getCentralBill().getContact().getId()) + "] " +
                                     future.get().getCentralBill().getContact().getName() +
                                     "   *** OK ***"
                     );
                 }
             }
-
-            LOGGER.info("\r\n");
 
             executorService.shutdown();
         }
