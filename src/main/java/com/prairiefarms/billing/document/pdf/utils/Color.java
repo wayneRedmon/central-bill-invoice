@@ -8,7 +8,7 @@ public enum Color {
     BLUE(207, 231, 245),
     GREEN(180, 248, 91),
     WHITE(255, 255, 255),
-    LIGHT_GRAY(167, 167, 167),
+    LIGHT_GRAY(219, 219, 219),
     RED(255, 0, 0);
 
     private final int red;
