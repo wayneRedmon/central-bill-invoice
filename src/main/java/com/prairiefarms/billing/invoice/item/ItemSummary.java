@@ -4,33 +4,42 @@ public class ItemSummary {
 
     private final String salesType;
     private final int id;
-    private final double priceEach;
     private final String name;
+    private final double priceEach;
+    private final boolean promotion;
     private final double size;
     private final double type;
     private final int label;
+    private final double pointsEach;
 
     private int quantity;
     private double extension;
+    private double totalPoints;
 
     public ItemSummary(String salesType,
                        int id,
-                       double priceEach,
                        String name,
+                       int quantity,
+                       double priceEach,
+                       boolean promotion,
+                       double extension,
                        double size,
                        double type,
                        int label,
-                       int quantity,
-                       double extension) {
+                       double pointsEach,
+                       double totalPoints) {
         this.salesType = salesType;
         this.id = id;
         this.name = name;
+        this.quantity = quantity;
+        this.promotion = promotion;
         this.priceEach = priceEach;
+        this.extension = extension;
         this.size = size;
         this.type = type;
         this.label = label;
-        this.quantity = quantity;
-        this.extension = extension;
+        this.pointsEach = pointsEach;
+        this.totalPoints = totalPoints;
     }
 
     public String getSalesType() {
@@ -45,12 +54,16 @@ public class ItemSummary {
         return name;
     }
 
+    public void setQuantity(int quantity) {
+        this.quantity += quantity;
+    }
+
     public double getPriceEach() {
         return priceEach;
     }
 
-    public void setQuantity(int quantity) {
-        this.quantity += quantity;
+    public boolean isPromotion() {
+        return promotion;
     }
 
     public double getExtension() {
@@ -73,6 +86,14 @@ public class ItemSummary {
         return label;
     }
 
+    public double getPointsEach() { return pointsEach; }
+
+    public void setTotalPoints(double totalPoints) {
+        this.totalPoints += totalPoints;
+    }
+
+    public double getTotalPoints() { return totalPoints; }
+
     public Item getItem() {
         return new Item(
                 salesType,
@@ -80,11 +101,13 @@ public class ItemSummary {
                 name,
                 quantity,
                 priceEach,
-                false,
+                promotion,
                 extension,
                 size,
                 type,
-                label
+                label,
+                pointsEach,
+                totalPoints
         );
     }
 }

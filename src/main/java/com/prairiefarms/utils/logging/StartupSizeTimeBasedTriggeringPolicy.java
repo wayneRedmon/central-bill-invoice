@@ -14,7 +14,6 @@ public class StartupSizeTimeBasedTriggeringPolicy<E> extends SizeAndTimeBasedFNA
     public boolean isTriggeringEvent(File activeFile, E event) {
         if (!started) {
             nextCheck = 0L;
-
             return started = true;
         } else {
             return super.isTriggeringEvent(activeFile, event);

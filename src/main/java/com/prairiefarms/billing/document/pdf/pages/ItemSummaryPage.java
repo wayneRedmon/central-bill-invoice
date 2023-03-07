@@ -4,27 +4,17 @@ import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.UnitValue;
-import com.prairiefarms.billing.document.pdf.PdfEnvironment;
-import com.prairiefarms.billing.document.pdf.pages.canvases.AddressCanvas;
-import com.prairiefarms.billing.document.pdf.pages.canvases.ItemCanvas;
-import com.prairiefarms.billing.document.pdf.pages.canvases.RemitToCanvas;
-import com.prairiefarms.billing.document.pdf.pages.canvases.SubjectCanvas;
-import com.prairiefarms.billing.document.pdf.utils.Color;
-import com.prairiefarms.billing.document.pdf.utils.FontSize;
-import com.prairiefarms.billing.document.pdf.utils.Number;
+import com.prairiefarms.billing.Environment;
+import com.prairiefarms.billing.document.pdf.pages.tables.*;
 import com.prairiefarms.billing.invoice.item.ItemSummary;
 import com.prairiefarms.billing.utils.Contact;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("DuplicatedCode")
 public class ItemSummaryPage {
 
     private static final int ITEM_LINES_PER_PAGE = 35;
@@ -35,7 +25,7 @@ public class ItemSummaryPage {
     private final List<ItemSummary> itemSummaries;
 
     private Canvas canvas;
-    private ItemCanvas itemCanvas;
+    private ItemTable itemTable;
     private int pages;
     private int page;
     private int line;
@@ -50,8 +40,8 @@ public class ItemSummaryPage {
         this.itemSummaries = itemSummaries;
     }
 
-    public void generate() {
-        pages = PdfEnvironment.getInstance().getPageCount(ITEM_LINES_PER_PAGE, itemSummaries.size());
+    public void generate() throws IOException {
+        pages = Environment.getInstance().getPageCount(ITEM_LINES_PER_PAGE, itemSummaries.size());
         page = 0;
 
         stampHeader();
@@ -67,67 +57,44 @@ public class ItemSummaryPage {
 
         for (ItemSummary itemSummary : sortedItemSummaries) {
             if (line > ITEM_LINES_PER_PAGE) stampHeader();
-            canvas.add(itemCanvas.itemTable(itemSummary.getItem()));
+            canvas.add(itemTable.itemTable(itemSummary.getItem()));
             line++;
         }
 
-        canvas.add(totalTable(itemSummaries.stream().mapToDouble(ItemSummary::getExtension).sum()));
+        ItemSummaryTotalTable itemSummaryTotalTable = new ItemSummaryTotalTable(itemSummaries.stream().mapToDouble(ItemSummary::getExtension).sum());
+        canvas.add(itemSummaryTotalTable.detail());
 
         canvas.close();
     }
 
-    private void stampHeader() {
+    private void stampHeader() throws IOException {
         PdfPage pdfPage = document.getPdfDocument().addNewPage();
 
         page++;
 
-        RemitToCanvas remitToCanvas = new RemitToCanvas(remitContact);
-        canvas = new Canvas(new PdfCanvas(pdfPage), RemitToCanvas.LOGO_RECTANGLE);
-        canvas.add(remitToCanvas.logoTable());
-        canvas = new Canvas(new PdfCanvas(pdfPage), RemitToCanvas.REMIT_TO_RECTANGLE);
-        canvas.add(remitToCanvas.table());
+        RemitToTable remitToTable = new RemitToTable(remitContact);
+        canvas = new Canvas(new PdfCanvas(pdfPage), RemitToTable.LOGO_RECTANGLE);
+        canvas.add(remitToTable.logoTable());
+        canvas = new Canvas(new PdfCanvas(pdfPage), RemitToTable.REMIT_TO_RECTANGLE);
+        canvas.add(remitToTable.detail());
 
-        SubjectCanvas subjectCanvas = new SubjectCanvas(
+        SubjectTable subjectTable = new SubjectTable(
                 "ITEM SUMMARY",
                 page,
                 pages,
                 centralBillContact.getId(),
                 0);
-        canvas = new Canvas(new PdfCanvas(pdfPage), SubjectCanvas.INVOICE_SUBJECT_RECTANGLE);
-        canvas.add(subjectCanvas.table());
+        canvas = new Canvas(new PdfCanvas(pdfPage), SubjectTable.INVOICE_SUBJECT_RECTANGLE);
+        canvas.add(subjectTable.detail());
 
-        AddressCanvas billToCanvas = new AddressCanvas("bill to", centralBillContact);
-        canvas = new Canvas(new PdfCanvas(pdfPage), AddressCanvas.BILL_TO_RECTANGLE);
-        canvas.add(billToCanvas.table());
+        AddressTable billToCanvas = new AddressTable("bill to", centralBillContact);
+        canvas = new Canvas(new PdfCanvas(pdfPage), AddressTable.BILL_TO_RECTANGLE);
+        canvas.add(billToCanvas.detail());
 
-        itemCanvas = new ItemCanvas();
-        canvas = new Canvas(new PdfCanvas(pdfPage), ItemCanvas.ITEM_SUMMARY_TABLE_RECTANGLE);
-        canvas.add(itemCanvas.headerTable());
+        itemTable = new ItemTable();
+        canvas = new Canvas(new PdfCanvas(pdfPage), ItemTable.ITEM_SUMMARY_TABLE_RECTANGLE);
+        canvas.add(itemTable.header());
 
         line = 0;
-    }
-
-    private Table totalTable(Double remittanceDue) {
-        return new Table(UnitValue.createPercentArray(new float[]{5f, 1f}))
-                .setWidth(UnitValue.createPercentValue(100))
-                .setFixedLayout()
-                .addCell(new Cell(1, 1)
-                        .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontDefault())
-                        .setFontSize(FontSize.LABEL.asFloat)
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph("TOTAL"))
-                )
-                .addCell(new Cell(1, 1)
-                        .setBackgroundColor(Color.BLUE.asDeviceRgb())
-                        .setBorder(PdfEnvironment.getInstance().LABEL_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getItemFontBold())
-                        .setFontSize(FontSize.SMALL.asFloat)
-                        .setFontColor(remittanceDue < 0 ? Color.RED.asDeviceRgb() : Color.BLACK.asDeviceRgb())
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph(Number.CURRENCY.type.format(remittanceDue)))
-                );
     }
 }

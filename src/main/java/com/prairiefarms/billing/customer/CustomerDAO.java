@@ -53,7 +53,8 @@ public class CustomerDAO {
                                 new ArrayList<>(Collections.singletonList(resultSet.getString("cusEmail")))
                         ),
                         new Terms(
-                                resultSet.getString("termsName")
+                                resultSet.getString("termsName"),
+                                resultSet.getInt("termsDueDays")
                         ),
                         resultSet.getString("salesperson"),
                         resultSet.getInt("useExtendedInvoice") == 1,

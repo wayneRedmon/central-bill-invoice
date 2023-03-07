@@ -2,6 +2,8 @@ package com.prairiefarms.billing.customer;
 
 import com.prairiefarms.billing.utils.Contact;
 
+import java.time.LocalDate;
+
 public class Customer {
 
     private final Contact contact;
@@ -44,4 +46,8 @@ public class Customer {
     public Double getTaxRate() { return taxRate; }
 
     public int getSortSequence() { return sortSequence; }
+
+    public LocalDate getDueByDate(LocalDate invoiceDeliveryDate) {
+        return invoiceDeliveryDate.plusDays(terms.getDueByDays());
+    }
 }

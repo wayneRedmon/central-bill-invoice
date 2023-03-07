@@ -4,26 +4,19 @@ import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.Document;
-import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.element.Cell;
-import com.itextpdf.layout.element.Paragraph;
-import com.itextpdf.layout.element.Table;
-import com.itextpdf.layout.properties.TextAlignment;
-import com.itextpdf.layout.properties.UnitValue;
+import com.prairiefarms.billing.Environment;
 import com.prairiefarms.billing.customer.Customer;
-import com.prairiefarms.billing.document.pdf.PdfEnvironment;
-import com.prairiefarms.billing.document.pdf.pages.canvases.*;
-import com.prairiefarms.billing.document.pdf.utils.Color;
-import com.prairiefarms.billing.document.pdf.utils.FontSize;
-import com.prairiefarms.billing.document.pdf.utils.Number;
+import com.prairiefarms.billing.document.pdf.pages.tables.*;
 import com.prairiefarms.billing.invoice.Invoice;
 import com.prairiefarms.billing.invoice.item.Item;
 import com.prairiefarms.billing.utils.Contact;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("DuplicatedCode")
 public class InvoicePage {
 
     private static final int ITEM_LINES_PER_PAGE = 35;
@@ -36,7 +29,7 @@ public class InvoicePage {
     private final Invoice invoice;
 
     private Canvas canvas;
-    private ItemCanvas itemCanvas;
+    private ItemTable itemTable;
     private int pages;
     private int page;
     private int line;
@@ -49,8 +42,8 @@ public class InvoicePage {
         this.invoice = invoice;
     }
 
-    public void generate() {
-        pages = PdfEnvironment.getInstance().getPageCount(ITEM_LINES_PER_PAGE, invoice.getItems().size() + TOTAL_LINES_PER_PAGE);
+    public void generate() throws IOException {
+        pages = Environment.getInstance().getPageCount(ITEM_LINES_PER_PAGE, invoice.getItems().size() + TOTAL_LINES_PER_PAGE);
         page = 0;
 
         stampHeader();
@@ -66,151 +59,59 @@ public class InvoicePage {
 
         for (Item item : sortedItems) {
             if (line > ITEM_LINES_PER_PAGE) stampHeader();
-            canvas.add(itemCanvas.itemTable(item));
+            canvas.add(itemTable.itemTable(item));
             line++;
         }
 
         if ((line + TOTAL_LINES_PER_PAGE) > ITEM_LINES_PER_PAGE) stampHeader();
 
-        canvas.add(total());
+        InvoiceTotalTable invoiceTotalTable = new InvoiceTotalTable(invoice);
+        canvas.add(invoiceTotalTable.detail());
 
         canvas.close();
     }
 
-    private void stampHeader() {
+    private void stampHeader() throws IOException {
         PdfPage pdfPage = document.getPdfDocument().addNewPage();
 
         page++;
 
-        RemitToCanvas remitToCanvas = new RemitToCanvas(remitToContact);
-        canvas = new Canvas(new PdfCanvas(pdfPage), RemitToCanvas.LOGO_RECTANGLE);
-        canvas.add(remitToCanvas.logoTable());
-        canvas = new Canvas(new PdfCanvas(pdfPage), RemitToCanvas.REMIT_TO_RECTANGLE);
-        canvas.add(remitToCanvas.table());
+        RemitToTable remitToTable = new RemitToTable(remitToContact);
+        canvas = new Canvas(new PdfCanvas(pdfPage), RemitToTable.LOGO_RECTANGLE);
+        canvas.add(remitToTable.logoTable());
+        canvas = new Canvas(new PdfCanvas(pdfPage), RemitToTable.REMIT_TO_RECTANGLE);
+        canvas.add(remitToTable.detail());
 
-        SubjectCanvas subjectCanvas = new SubjectCanvas(
+        SubjectTable subjectTable = new SubjectTable(
                 "INVOICE #" + (customer.isExtendedInvoiceId() ? invoice.getHeader().getExtendedId() : String.valueOf(invoice.getHeader().getId())),
                 page,
                 pages,
                 billToContact.getId(),
                 customer.getContact().getId()
         );
-        canvas = new Canvas(new PdfCanvas(pdfPage), SubjectCanvas.INVOICE_SUBJECT_RECTANGLE);
-        canvas.add(subjectCanvas.table());
+        canvas = new Canvas(new PdfCanvas(pdfPage), SubjectTable.INVOICE_SUBJECT_RECTANGLE);
+        canvas.add(subjectTable.detail());
 
-        AddressCanvas billToCanvas = new AddressCanvas("bill to", billToContact);
-        canvas = new Canvas(new PdfCanvas(pdfPage), AddressCanvas.BILL_TO_RECTANGLE);
-        canvas.add(billToCanvas.table());
+        AddressTable billToCanvas = new AddressTable("bill to", billToContact);
+        canvas = new Canvas(new PdfCanvas(pdfPage), AddressTable.BILL_TO_RECTANGLE);
+        canvas.add(billToCanvas.detail());
 
-        AddressCanvas shipToCanvas = new AddressCanvas("ship to", customer.getContact());
-        canvas = new Canvas(new PdfCanvas(pdfPage), AddressCanvas.SHIP_TO_RECTANGLE);
-        canvas.add(shipToCanvas.table());
+        AddressTable shipToCanvas = new AddressTable("ship to", customer.getContact());
+        canvas = new Canvas(new PdfCanvas(pdfPage), AddressTable.SHIP_TO_RECTANGLE);
+        canvas.add(shipToCanvas.detail());
 
-        SaleCanvas saleCanvas = new SaleCanvas(
+        SaleTable saleTable = new SaleTable(
                 invoice.getHeader().getPurchaseOrder(),
                 customer.getSalesperson(),
                 invoice.getHeader().getDeliveryDate()
         );
-        canvas = new Canvas(new PdfCanvas(pdfPage), SaleCanvas.SALE_RECTANGLE);
-        canvas.add(saleCanvas.table());
+        canvas = new Canvas(new PdfCanvas(pdfPage), SaleTable.SALE_RECTANGLE);
+        canvas.add(saleTable.detail());
 
-        itemCanvas = new ItemCanvas();
-        canvas = new Canvas(new PdfCanvas(pdfPage), ItemCanvas.ITEM_TABLE_RECTANGLE);
-        canvas.add(itemCanvas.headerTable());
+        itemTable = new ItemTable();
+        canvas = new Canvas(new PdfCanvas(pdfPage), ItemTable.ITEM_TABLE_RECTANGLE);
+        canvas.add(itemTable.header());
 
         line = 0;
-    }
-
-    private Table total() {
-        return new Table(UnitValue.createPercentArray(new float[]{5f, 1f}))
-                .setWidth(UnitValue.createPercentValue(100))
-                .setFixedLayout()
-                .addCell(new Cell(1, 1)
-                        .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontDefault())
-                        .setFontSize(FontSize.LABEL.asFloat)
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph("SUBTOTAL"))
-                )
-                .addCell(new Cell(1, 1)
-                        .setBackgroundColor(Color.BLUE.asDeviceRgb())
-                        .setBorder(PdfEnvironment.getInstance().LABEL_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getItemFontBold())
-                        .setFontSize(FontSize.SMALL.asFloat)
-                        .setFontColor(invoice.subTotal() < 0 ? Color.RED.asDeviceRgb() : Color.BLACK.asDeviceRgb())
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph(Number.CURRENCY.type.format(invoice.subTotal())))
-                )
-                .addCell(new Cell(1, 1)
-                        .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontDefault())
-                        .setFontSize(FontSize.LABEL.asFloat)
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph("APPLIED"))
-                )
-                .addCell(new Cell(1, 1)
-                        .setBorder(PdfEnvironment.getInstance().LABEL_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getItemFont())
-                        .setFontSize(FontSize.SMALL.asFloat)
-                        .setFontColor(invoice.getAppliedAmount() < 0 ? Color.RED.asDeviceRgb() : Color.BLACK.asDeviceRgb())
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph(Number.CURRENCY.type.format(invoice.getAppliedAmount())))
-                )
-                .addCell(new Cell(1, 1)
-                        .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontDefault())
-                        .setFontSize(FontSize.LABEL.asFloat)
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph((invoice.getDiscountRate() == 0 ? "" : invoice.getDiscountRate() + "% ") + "DISCOUNT"))
-                )
-                .addCell(new Cell(1, 1)
-                        .setBorder(PdfEnvironment.getInstance().LABEL_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getItemFont())
-                        .setFontSize(FontSize.SMALL.asFloat)
-                        .setFontColor(invoice.getDiscountAmount() < 0 ? Color.RED.asDeviceRgb() : Color.BLACK.asDeviceRgb())
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph(Number.CURRENCY.type.format(invoice.getDiscountAmount())))
-                )
-                .addCell(new Cell(1, 1)
-                        .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontDefault())
-                        .setFontSize(FontSize.LABEL.asFloat)
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph((invoice.getTaxRate() == 0 ? "" : invoice.getTaxRate() + "% ") + "TAX"))
-                )
-                .addCell(new Cell(1, 1)
-                        .setBorder(PdfEnvironment.getInstance().LABEL_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getItemFont())
-                        .setFontSize(FontSize.SMALL.asFloat)
-                        .setFontColor(invoice.getTaxAmount() < 0 ? Color.RED.asDeviceRgb() : Color.BLACK.asDeviceRgb())
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph(Number.CURRENCY.type.format(invoice.getTaxAmount())))
-                )
-                .addCell(new Cell(1, 1)
-                        .setBorder(Border.NO_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getFontBold())
-                        .setFontSize(FontSize.LABEL.asFloat)
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph("TOTAL DUE"))
-                )
-                .addCell(new Cell(1, 1)
-                        .setBackgroundColor(Color.BLUE.asDeviceRgb())
-                        .setBorder(PdfEnvironment.getInstance().LABEL_BORDER)
-                        .setPadding(PdfEnvironment.getInstance().DEFAULT_CELL_PADDING)
-                        .setFont(PdfEnvironment.getInstance().getItemFontBold())
-                        .setFontSize(FontSize.SMALL.asFloat)
-                        .setFontColor(invoice.amountDue() < 0 ? Color.RED.asDeviceRgb() : Color.BLACK.asDeviceRgb())
-                        .setTextAlignment(TextAlignment.RIGHT)
-                        .add(new Paragraph(Number.CURRENCY.type.format(invoice.amountDue())))
-                );
     }
 }

@@ -9,6 +9,7 @@ target/
 # IntelliJ project files
 *.iml
 .idea/
+.idea/*.xml
 
 # macOS
 .DS_Store
