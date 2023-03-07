@@ -44,7 +44,6 @@ public class PdfService implements Callable<DocumentThread> {
             this.emailDocument();
             this.archiveDocument();
         } catch (Exception exception) {
-            exception.printStackTrace();
             threadException = exception;
         }
 
