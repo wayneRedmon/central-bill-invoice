@@ -37,14 +37,18 @@ public class Service {
     public Service() {
     }
 
-    public void init() throws Exception {
-        FolderMaintenance.clean(Environment.getInstance().emailSentBox(), 7);
+    public void init() {
+        try {
+            FolderMaintenance.clean(Environment.getInstance().emailSentBox(), 7);
 
-        centralBillInvoices = new ArrayList<>();
+            centralBillInvoices = new ArrayList<>();
 
-        this.getCentralBillInvoices();
+            this.getCentralBillInvoices();
 
-        if (ObjectUtils.isNotEmpty(centralBillInvoices)) this.executeThreads();
+            if (ObjectUtils.isNotEmpty(centralBillInvoices)) this.executeThreads();
+        } catch (Exception exception) {
+            LOGGER.error("Exception in Service.init()", exception);
+        }
     }
 
     private void getCentralBillInvoices() throws SQLException {
@@ -90,21 +94,16 @@ public class Service {
                         }
                     }
 
-                    if (ObjectUtils.isNotEmpty(invoices))
-                        customerInvoices.add(
-                                new CustomerInvoice(customer, invoices)
-                        );
+                    if (ObjectUtils.isNotEmpty(invoices)) customerInvoices.add(new CustomerInvoice(customer, invoices));
                 }
 
                 if (ObjectUtils.isNotEmpty(customerInvoices))
-                    centralBillInvoices.add(
-                            new CentralBillInvoice(centralBill, customerInvoices)
-                    );
+                    centralBillInvoices.add(new CentralBillInvoice(centralBill, customerInvoices));
             }
         }
     }
 
-    private void executeThreads() throws InterruptedException, ExecutionException {
+    private void executeThreads() throws Exception {
         Set<Callable<DocumentThread>> callables = new HashSet<>();
 
         for (CentralBillInvoice centralBillInvoice : centralBillInvoices) {
@@ -122,15 +121,17 @@ public class Service {
 
             for (Future<DocumentThread> future : futures) {
                 if (ObjectUtils.isNotEmpty(future.get().getException())) {
+                    System.out.println("exception= " + future.get().getException());
+
                     LOGGER.error(
-                            "\r\nException in Service.executeThreads() while processing " +
-                                    "[" + String.format("%03d",future.get().getCentralBill().getContact().getId()) + "] " +
+                            "Exception in Service.executeThreads(): " +
+                                    "[" + future.get().getCentralBill().getIdAsText() + "] " +
                                     future.get().getCentralBill().getContact().getName(),
-                            future.get().getException().getCause()
+                            future.get().getException()
                     );
                 } else {
                     LOGGER.info(
-                            "[" + String.format("%03d",future.get().getCentralBill().getContact().getId()) + "] " +
+                            "[" + future.get().getCentralBill().getIdAsText() + "] " +
                                     future.get().getCentralBill().getContact().getName() +
                                     "   *** OK ***"
                     );
