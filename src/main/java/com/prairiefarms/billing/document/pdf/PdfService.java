@@ -40,11 +40,10 @@ public class PdfService implements Callable<DocumentThread> {
         Exception threadException = null;
 
         try {
-            this.createDocument();
-            this.emailDocument();
-            this.archiveDocument();
+            createDocument();
+            emailDocument();
+            archiveDocument();
         } catch (Exception exception) {
-            exception.printStackTrace();
             threadException = exception;
         }
 
@@ -123,7 +122,7 @@ public class PdfService implements Callable<DocumentThread> {
         email.send();
     }
 
-    private void archiveDocument() throws Exception {
+    private void archiveDocument() throws IOException {
         FolderMaintenance.move(
                 Environment.getInstance().emailOutBox() + documentName,
                 Environment.getInstance().emailSentBox() + documentName

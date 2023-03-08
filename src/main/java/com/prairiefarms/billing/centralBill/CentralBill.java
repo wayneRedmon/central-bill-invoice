@@ -36,4 +36,8 @@ public class CentralBill {
     public DocumentType getDocumentType() {
         return documentType;
     }
+
+    public String getIdAsText() {
+        return String.format("%03d", contact.getId());
+    }
 }
