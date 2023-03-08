@@ -95,7 +95,7 @@ public class XlsxService implements Callable<DocumentThread> {
         email.send();
     }
 
-    private void archiveDocument() throws Exception {
+    private void archiveDocument() throws IOException {
         FolderMaintenance.move(
                 Environment.getInstance().emailOutBox() + documentName,
                 Environment.getInstance().emailSentBox() + documentName
