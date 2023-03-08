@@ -40,9 +40,9 @@ public class PdfService implements Callable<DocumentThread> {
         Exception threadException = null;
 
         try {
-            this.createDocument();
-            this.emailDocument();
-            this.archiveDocument();
+            createDocument();
+            emailDocument();
+            archiveDocument();
         } catch (Exception exception) {
             threadException = exception;
         }

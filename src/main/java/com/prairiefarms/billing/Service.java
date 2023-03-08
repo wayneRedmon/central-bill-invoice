@@ -44,9 +44,10 @@ public class Service {
 
             centralBillInvoices = new ArrayList<>();
 
-            this.getCentralBillInvoices();
+            getCentralBillInvoices();
 
-            if (ObjectUtils.isNotEmpty(centralBillInvoices)) this.executeThreads();
+            if (ObjectUtils.isNotEmpty(centralBillInvoices))
+                executeThreads();
         } catch (Exception exception) {
             LOGGER.error("Exception in Service.init()", exception);
         }
