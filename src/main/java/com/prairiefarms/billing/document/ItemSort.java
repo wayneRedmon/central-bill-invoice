@@ -12,17 +12,9 @@ import java.util.stream.Collectors;
 
 public class ItemSort {
 
-    private final List<CustomerInvoice> customerInvoices;
-
-    private List<Item> unsortedItems;
+    private final List<Item> unsortedItems;
 
     public ItemSort(List<CustomerInvoice> customerInvoices) {
-        this.customerInvoices = customerInvoices;
-
-        this.extract();
-    }
-
-    private void extract() {
         unsortedItems = new ArrayList<>();
 
         for (CustomerInvoice customerInvoice : customerInvoices) {

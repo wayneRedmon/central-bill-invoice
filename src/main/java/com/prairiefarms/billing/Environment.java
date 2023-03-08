@@ -43,7 +43,6 @@ public class Environment {
     private static String emailServer;
     private static List<String> emailCarbonCopy;
     private static String xlsxDocumentPassword;
-    private static InputStream xlsxTemplate;
 
     private static class SingletonHelper {
         private static final Environment INSTANCE = new Environment();
@@ -137,10 +136,6 @@ public class Environment {
         lines = lines <= 0 ? 1 : lines;
 
         return lines % linesPerPage != 0 ? lines / linesPerPage + 1 : lines / linesPerPage;
-    }
-
-    public InputStream getXlsxTemplate() {
-        return xlsxTemplate;
     }
 
     public String getEmailSubject(int centralBillId) {
@@ -297,7 +292,7 @@ public class Environment {
     }
 
     private static boolean setXlsxTemplate() {
-        xlsxTemplate = Environment.class.getClassLoader().getResourceAsStream(XLSX_TEMPLATE_PATH);
+        InputStream xlsxTemplate = Environment.class.getClassLoader().getResourceAsStream(XLSX_TEMPLATE_PATH);
 
         return ObjectUtils.isNotEmpty(xlsxTemplate);
     }

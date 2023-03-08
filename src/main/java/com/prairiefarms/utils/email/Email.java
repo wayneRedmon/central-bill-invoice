@@ -43,7 +43,7 @@ public class Email {
         this.multiPartEmail = new HtmlEmail();
     }
 
-    public void send() throws Exception {
+    public void send() throws EmailException {
         if (StringUtils.isNotBlank(server) &&
                 ObjectUtils.isNotEmpty(message.getFrom()) &&
                 ObjectUtils.isNotEmpty(message.getTo()) &&
@@ -61,13 +61,13 @@ public class Email {
         }
     }
 
-    private void addFromAddress(List<String> fromAddresses) throws Exception {
+    private void addFromAddress(List<String> fromAddresses) throws EmailException {
         StringBuilder addresses = new StringBuilder();
 
         for (String address : fromAddresses) {
             if (StringUtils.isNotBlank(address)) {
-                if (!StringUtils.normalizeSpace(addresses.toString()).equals("")) addresses.append(",");
-
+                if (!StringUtils.normalizeSpace(addresses.toString()).equals(""))
+                    addresses.append(",");
                 addresses.append(StringUtils.normalizeSpace(address));
             }
         }
@@ -75,22 +75,25 @@ public class Email {
         multiPartEmail.setFrom(addresses.toString());
     }
 
-    private void addRecipientAddress(List<String> recipients) throws Exception {
+    private void addRecipientAddress(List<String> recipients) throws EmailException {
         for (String recipient : recipients) {
-            if (ObjectUtils.isNotEmpty(recipient)) multiPartEmail.addTo(StringUtils.normalizeSpace(recipient));
+            if (ObjectUtils.isNotEmpty(recipient))
+                multiPartEmail.addTo(StringUtils.normalizeSpace(recipient));
         }
     }
 
-    private void addCarbonCopyAddress(List<String> recipients) throws Exception {
+    private void addCarbonCopyAddress(List<String> recipients) throws EmailException {
         for (String recipient : recipients) {
-            if (ObjectUtils.isNotEmpty(recipient)) multiPartEmail.addCc(StringUtils.normalizeSpace(recipient));
+            if (ObjectUtils.isNotEmpty(recipient))
+                multiPartEmail.addCc(StringUtils.normalizeSpace(recipient));
         }
     }
 
     private void addAttachment(List<File> files) throws EmailException {
         if (ObjectUtils.isNotEmpty(files)) {
             for (File file : files) {
-                if (ObjectUtils.isNotEmpty(file)) multiPartEmail.attach(file);
+                if (ObjectUtils.isNotEmpty(file))
+                    multiPartEmail.attach(file);
             }
         }
     }
@@ -99,6 +102,7 @@ public class Email {
         return "<body style=\"width:100%;font-family:Helvetica,Arial,sans-serif;color:#2c3e50;\">" +
                 DO_NOT_REPLY +
                 StringUtils.normalizeSpace(messageBody.toString()) +
-                LEGAL_DISCLAIMER + "</body>";
+                LEGAL_DISCLAIMER +
+                "</body>";
     }
 }
