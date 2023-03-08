@@ -22,11 +22,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.*;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 public class Service {
 
@@ -94,7 +95,8 @@ public class Service {
                         }
                     }
 
-                    if (ObjectUtils.isNotEmpty(invoices)) customerInvoices.add(new CustomerInvoice(customer, invoices));
+                    if (ObjectUtils.isNotEmpty(invoices))
+                        customerInvoices.add(new CustomerInvoice(customer, invoices));
                 }
 
                 if (ObjectUtils.isNotEmpty(customerInvoices))
@@ -115,14 +117,24 @@ public class Service {
         }
 
         if (ObjectUtils.isNotEmpty(callables)) {
-            ExecutorService executorService = Executors.newFixedThreadPool(callables.size());
+            final ExecutorService executorService = Executors.newFixedThreadPool(callables.size());
 
-            List<Future<DocumentThread>> futures = executorService.invokeAll(callables);
+            final List<Future<DocumentThread>> futures = executorService
+                    .invokeAll(callables)
+                    .stream().sorted(Comparator.comparing(o -> {
+                        try {
+                            return o.get().getCentralBill().getContact().getId();
+                        } catch (Exception exception) {
+                            try {
+                                throw new Exception(exception);
+                            } catch (Exception exception1) {
+                                throw new RuntimeException(exception1);
+                            }
+                        }
+                    })).collect(Collectors.toList());
 
             for (Future<DocumentThread> future : futures) {
                 if (ObjectUtils.isNotEmpty(future.get().getException())) {
-                    System.out.println("exception= " + future.get().getException());
-
                     LOGGER.error(
                             "Exception in Service.executeThreads(): " +
                                     "[" + future.get().getCentralBill().getIdAsText() + "] " +
