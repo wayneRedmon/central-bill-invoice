@@ -5,6 +5,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public final class FolderMaintenance {
@@ -28,6 +29,13 @@ public final class FolderMaintenance {
     }
 
     public static void move(final String from, final String to) throws IOException {
-        Files.move(Paths.get(from), Paths.get(to));
+        //Files.move(Paths.get(from), Paths.get(to));
+        Path sourcePath = Paths.get(from);
+        Path targetPath = Paths.get(to);
+        File file = targetPath.toFile();
+
+        if (file.isFile()) Files.delete(targetPath);
+
+        Files.move(sourcePath, targetPath);
     }
 }

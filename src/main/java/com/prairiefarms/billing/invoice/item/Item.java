@@ -55,6 +55,14 @@ public class Item {
                 String.format("%07d", id).substring(5, 7);
     }
 
+    public String getIdAndName() {
+        return salesType.equals("A") ?
+                String.format("%1$7s", id) + "  " + name :
+                String.format("%07d", id).substring(0, 2) + "-" +
+                        String.format("%07d", id).substring(2, 5) + "-" +
+                        String.format("%07d", id).substring(5, 7) + "  " + name;
+    }
+
     public String getName() {
         return name;
     }
@@ -87,7 +95,11 @@ public class Item {
         return label;
     }
 
-    public double getPointsEach() { return pointsEach; }
+    public double getPointsEach() {
+        return pointsEach;
+    }
 
-    public double getTotalPoints() { return totalPoints; }
+    public double getTotalPoints() {
+        return totalPoints;
+    }
 }

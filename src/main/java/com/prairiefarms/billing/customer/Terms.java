@@ -1,7 +1,5 @@
 package com.prairiefarms.billing.customer;
 
-import org.apache.commons.text.WordUtils;
-
 public class Terms {
 
     private final String name;
@@ -14,8 +12,10 @@ public class Terms {
     }
 
     public String getName() {
-        return WordUtils.swapCase(name);
+        return name;
     }
 
-    public int getDueByDays() { return dueByDays; }
+    public int getDueByDays() {
+        return dueByDays;
+    }
 }

@@ -12,18 +12,14 @@ import java.util.stream.Collectors;
 
 public class ItemSort {
 
-    private final List<Item> unsortedItems;
-
-    public ItemSort(List<CustomerInvoice> customerInvoices) {
-        unsortedItems = new ArrayList<>();
+    public static List<ItemSummary> sort(List<CustomerInvoice> customerInvoices) {
+        List<Item> unsortedItems = new ArrayList<>();
 
         for (CustomerInvoice customerInvoice : customerInvoices) {
             for (Invoice invoice : customerInvoice.getInvoices())
                 unsortedItems.addAll(invoice.getItems());
         }
-    }
 
-    public List<ItemSummary> sort() {
         List<ItemSummary> itemSummaries = new ArrayList<>();
 
         boolean found;

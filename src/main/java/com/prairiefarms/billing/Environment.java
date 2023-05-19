@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -29,7 +30,6 @@ public class Environment {
     private static final String PATH_TO_APPLICATION_PROPERTIES = "./prairiefarmsApplication.properties";
     private static final String PATH_TO_DAIRY_BUSINESS_FILE = "./dairyBusiness.csv";
     private static final String BILLING_TYPE = "invoice";
-    private static final String XLSX_TEMPLATE_PATH = "templates/DistributorInvoice.xlsx";
 
     private static CommandLine commandLine;
     private static Credentials credentials;
@@ -63,7 +63,7 @@ public class Environment {
         if (setCredentials()) {
             if (setServer()) {
                 try {
-                    if (setLibrary() && setDairy() && setFrequency() && setBillingDate() && setXlsxTemplate()) {
+                    if (setLibrary() && setDairy() && setFrequency() && setBillingDate()) {
                         if (setEmailServer()) ready = setEmailCarbonCopy();
                     }
                 } catch (Exception exception) {
@@ -91,6 +91,10 @@ public class Environment {
         return dairyId;
     }
 
+    public String getDairyIdAsText() {
+        return String.format("%03d", dairyId);
+    }
+
     public String getDairyLogoPath() {
         return dairyLogoPath;
     }
@@ -101,6 +105,10 @@ public class Environment {
 
     public String frequencyAsText() {
         return frequency.type;
+    }
+
+    public LocalDate getBillingDate() {
+        return billingDate;
     }
 
     public String billingDateAsUSA() {
@@ -169,9 +177,9 @@ public class Environment {
     private static boolean setServer() {
         server = "";
 
-        if (StringUtils.isNotBlank(commandLine.getOptionValue("server"))) {
+        if (StringUtils.isNotBlank(commandLine.getOptionValue("server")))
             server = StringUtils.normalizeSpace(commandLine.getOptionValue("server"));
-        }
+
 
         return StringUtils.isNotBlank(server);
     }
@@ -270,13 +278,15 @@ public class Environment {
     }
 
     private static boolean setEmailCarbonCopy() {
-        final String sql = "select email from ds_EmailCC";
+        final String sql = "select email from ds_EmailCC where application=?";
 
         emailCarbonCopy = new ArrayList<>();
 
         try (HostConnection hostConnection = new HostConnection(server, credentials, library)) {
-            try (Statement statement = hostConnection.get().createStatement()) {
-                try (ResultSet resultSet = statement.executeQuery(sql)) {
+            try (PreparedStatement preparedStatement = hostConnection.get().prepareStatement(sql)) {
+                preparedStatement.setString(1, BILLING_TYPE);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     while (resultSet.next()) {
                         if (StringUtils.isNotBlank(resultSet.getString("email"))) {
                             emailCarbonCopy.add(resultSet.getString("email"));
@@ -289,11 +299,5 @@ public class Environment {
         }
 
         return ObjectUtils.isNotEmpty(emailCarbonCopy);
-    }
-
-    private static boolean setXlsxTemplate() {
-        InputStream xlsxTemplate = Environment.class.getClassLoader().getResourceAsStream(XLSX_TEMPLATE_PATH);
-
-        return ObjectUtils.isNotEmpty(xlsxTemplate);
     }
 }

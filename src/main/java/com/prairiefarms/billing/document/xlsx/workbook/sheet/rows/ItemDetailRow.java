@@ -7,92 +7,127 @@ import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceDiscountCells;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceTaxCells;
 import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceTotalCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.item.totals.ItemTotalExtensionCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.item.totals.ItemTotalPointsCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.item.totals.ItemTotalQuantityCell;
 import com.prairiefarms.billing.invoice.item.Item;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.RegionUtil;
 import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 public class ItemDetailRow {
 
-    public static void set(XSSFSheet xssfSheet, int rowNumber, Item item) {
-        XSSFCell cell = xssfSheet.getRow(rowNumber).getCell(0);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getItemIdStyle());
-        cell.setCellType(CellType.NUMERIC);
-        cell.setCellValue(item.getSalesType().equals("A") ? String.valueOf(item.getId()) : item.getIdAsAccount());
+    public static void setTableHeader(XSSFSheet xssfSheet, int rowNumber) {
+        XSSFRow xssfRow = xssfSheet.createRow(rowNumber);
 
-        cell = xssfSheet.getRow(rowNumber).getCell(1);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getItemNameStyle());
-        cell.setCellType(CellType.STRING);
-        cell.setCellValue(item.getName());
+        XSSFCell xssfCell = xssfRow.createCell(0);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("ITEM");
+        xssfSheet.addMergedRegion(new CellRangeAddress(xssfRow.getRowNum(), xssfRow.getRowNum(), 0, 2));
 
-        CellRangeAddress cellRangeAddress = new CellRangeAddress(rowNumber, rowNumber, 1, 2);
-        RegionUtil.setBorderLeft(BorderStyle.THIN, cellRangeAddress, xssfSheet);
-        RegionUtil.setBorderRight(BorderStyle.THIN, cellRangeAddress, xssfSheet);
-        RegionUtil.setBorderTop(BorderStyle.THIN, cellRangeAddress, xssfSheet);
-        RegionUtil.setBorderBottom(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        xssfCell = xssfRow.createCell(3);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("POINTS");
 
-        cell = xssfSheet.getRow(rowNumber).getCell(3);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getPointsColumnStyle());
-        cell.setCellType(CellType.NUMERIC);
-        cell.setCellValue(item.getTotalPoints());
+        xssfCell = xssfRow.createCell(4);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("QUANTITY");
 
-        cell = xssfSheet.getRow(rowNumber).getCell(4);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getQuantityColumnStyle());
-        cell.setCellType(CellType.NUMERIC);
-        cell.setCellValue(item.getQuantity());
+        xssfCell = xssfRow.createCell(5);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("PRICE EA");
 
-        cell = xssfSheet.getRow(rowNumber).getCell(5);
-        cell.setCellStyle(item.isPromotion() ? WorkbookEnvironment.getInstance().getPromotionPriceStyle() : WorkbookEnvironment.getInstance().getPriceEachStyle());
-        cell.setCellType(CellType.NUMERIC);
-        cell.setCellValue(item.getPriceEach());
-
-        cell = xssfSheet.getRow(rowNumber).getCell(6);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getTotalColumnStyle());
-        cell.setCellType(CellType.NUMERIC);
-        cell.setCellValue(item.getExtension());
+        xssfCell = xssfRow.createCell(6);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("TOTAL");
     }
 
-    public static void set(XSSFSheet sheet, int startingRowNumber, int endingRowNumber, Double invoiceSubtotal, CentralBill centralBill, Customer customer, Double appliedAmount) {
-        ItemTotalPointsCell.set(sheet, startingRowNumber, endingRowNumber);
-        ItemTotalQuantityCell.set(sheet, startingRowNumber, endingRowNumber);
-        ItemTotalExtensionCell.set(sheet, startingRowNumber, endingRowNumber);
+    public static void setItemRow(XSSFSheet xssfSheet, int rowNumber, Item item) {
+        XSSFRow xssfRow = xssfSheet.getRow(rowNumber);
 
-        int rowNumber = endingRowNumber + 2;
-        String formula = "G" + rowNumber;
+        if (ObjectUtils.isEmpty(xssfRow)) xssfRow = xssfSheet.createRow(rowNumber);
 
-        if (appliedAmount > 0d) {
-            invoiceSubtotal -= appliedAmount;
-            InvoiceAppliedCell.set(sheet, rowNumber, appliedAmount);
-            formula = formula.trim() + " - G" + rowNumber;
-        } else {
-            InvoiceAppliedCell.set(sheet, rowNumber);
-        }
+        XSSFCell xssfCell = xssfRow.createCell(0);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_LEFT_BORDERED);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue(item.getIdAndName());
+        xssfSheet.addMergedRegion(new CellRangeAddress(xssfRow.getRowNum(), xssfRow.getRowNum(), 0, 2));
+
+        CellRangeAddress cellRangeAddress = new CellRangeAddress(xssfRow.getRowNum(), xssfRow.getRowNum(), 0, 2);
+        RegionUtil.setBorderTop(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        RegionUtil.setTopBorderColor(IndexedColors.GREY_50_PERCENT.getIndex(), cellRangeAddress, xssfSheet);
+        RegionUtil.setBorderLeft(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        RegionUtil.setLeftBorderColor(IndexedColors.GREY_50_PERCENT.getIndex(), cellRangeAddress, xssfSheet);
+        RegionUtil.setBorderRight(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        RegionUtil.setRightBorderColor(IndexedColors.GREY_50_PERCENT.getIndex(), cellRangeAddress, xssfSheet);
+        RegionUtil.setBorderBottom(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        RegionUtil.setBottomBorderColor(IndexedColors.GREY_50_PERCENT.getIndex(), cellRangeAddress, xssfSheet);
+
+        xssfCell = xssfRow.createCell(3);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_RIGHT_BORDERED_DOUBLE);
+        xssfCell.setCellType(CellType.NUMERIC);
+        xssfCell.setCellValue(item.getTotalPoints());
+
+        xssfCell = xssfRow.createCell(4);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_RIGHT_BORDERED_INTEGER);
+        xssfCell.setCellType(CellType.NUMERIC);
+        xssfCell.setCellValue(item.getQuantity());
+
+        xssfCell = xssfRow.createCell(5);
+        /*xssfCell.setCellStyle(
+                item.isPromotion() ?
+                        WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_RIGHT_BORDERED_PRICE_PROMOTION :
+                        WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_RIGHT_BORDERED_PRICE
+        );*/
+        xssfCell.setCellType(CellType.NUMERIC);
+        xssfCell.setCellValue(item.getPriceEach());
+
+        xssfCell = xssfRow.createCell(6);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_RIGHT_BORDERED_CURRENCY);
+        xssfCell.setCellType(CellType.NUMERIC);
+        xssfCell.setCellValue(item.getExtension());
+    }
+
+    public static void setInvoiceTotal(XSSFSheet xssfSheet, int startingRowNumber, int endingRowNumber, Double invoiceSubtotal, CentralBill centralBill, Customer customer, Double appliedAmount) {
+        int rowNumber = endingRowNumber;
+
+        String subtotalCellReference = InvoiceSubtotalRow.set(xssfSheet, startingRowNumber, rowNumber);
 
         rowNumber++;
-        if (centralBill.fixedDiscountRate() > 0d) {
-            invoiceSubtotal -= (invoiceSubtotal * centralBill.fixedDiscountRate());
-            InvoiceDiscountCells.set(sheet, rowNumber, centralBill.fixedDiscountRate(), invoiceSubtotal);
-            formula = formula.trim() + " - G" + rowNumber;
-        } else {
-            InvoiceDiscountCells.set(sheet, rowNumber);
-        }
+
+        invoiceSubtotal -= appliedAmount;
+
+        final String appliedCellReference = InvoiceAppliedCell.set(xssfSheet, rowNumber, appliedAmount);
 
         rowNumber++;
-        if (customer.getTaxRate() > 0D) {
-            invoiceSubtotal -= (invoiceSubtotal * customer.getTaxRate());
-            InvoiceTaxCells.set(sheet, rowNumber, customer.getTaxRate(), invoiceSubtotal);
-            formula = formula.trim() + " + G" + rowNumber;
-        } else {
-            InvoiceTaxCells.set(sheet, rowNumber);
-        }
+
+        double discountedAmount = invoiceSubtotal * centralBill.fixedDiscountRate();
+
+        invoiceSubtotal -= discountedAmount;
+
+        final String discountCellReference = InvoiceDiscountCells.set(xssfSheet, rowNumber, centralBill.fixedDiscountRate(), discountedAmount);
 
         rowNumber++;
-        InvoiceTotalCell.set(sheet, rowNumber, formula);
+
+        double taxAmount = invoiceSubtotal * customer.getTaxRate();
+
+        final String taxAmountCellReference = InvoiceTaxCells.set(xssfSheet, rowNumber, customer.getTaxRate(), taxAmount);
+
+        rowNumber++;
+
+        String formula = subtotalCellReference + "-" +
+                appliedCellReference + "-" +
+                discountCellReference + "+" +
+                taxAmountCellReference;
+
+        InvoiceTotalCell.set(xssfSheet, rowNumber, formula);
     }
 }

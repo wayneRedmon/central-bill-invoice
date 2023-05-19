@@ -1,17 +1,14 @@
 package com.prairiefarms.billing.document.xlsx.workbook.sheet.rows;
 
-import com.prairiefarms.billing.Environment;
+import com.prairiefarms.billing.customer.Terms;
 import com.prairiefarms.billing.document.xlsx.workbook.WorkbookEnvironment;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.centralBill.BillToAccountCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.instruction.InstructionCell;
-import com.prairiefarms.billing.document.xlsx.workbook.sheet.rows.cells.invoice.InvoiceDateCell;
 import com.prairiefarms.billing.utils.Contact;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.ss.util.RegionUtil;
 import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 import java.time.LocalDate;
@@ -21,109 +18,158 @@ import java.util.List;
 
 public class RemittanceSummaryRow {
 
-    private final XSSFSheet xssfSheet;
+    private static final List<String> pointsSubtotalCellReferences = new ArrayList<>();
+    private static final List<String> quantitySubtotalCellReferences = new ArrayList<>();
+    private static final List<String> amountDueSubtotalCellReferences = new ArrayList<>();
 
-    private final List<String> pointsSubtotalCellReferences = new ArrayList<>();
-    private final List<String> quantitySubtotalCellReferences = new ArrayList<>();
-    private final List<String> amountDueSubtotalCellReferences = new ArrayList<>();
+    public static void setTableHeader(XSSFSheet xssfSheet, int rowNumber) {
+        XSSFRow xssfRow = xssfSheet.createRow(rowNumber);
 
-    public RemittanceSummaryRow(XSSFSheet xssfSheet) {
-        this.xssfSheet = xssfSheet;
+        XSSFCell xssfCell = xssfRow.createCell(1);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("INVOICE");
+
+        xssfCell = xssfRow.createCell(2);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("DELIVERED");
+
+        xssfCell = xssfRow.createCell(3);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("POINTS");
+
+        xssfCell = xssfRow.createCell(4);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("QUANTITY");
+
+        xssfCell = xssfRow.createCell(5);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("TOTAL");
+
+        xssfCell = xssfRow.createCell(6);
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_CENTER_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("DUE BY");
     }
 
-    public void set(int billToId) {
-        InvoiceDateCell.set(xssfSheet);
-        BillToAccountCell.set(xssfSheet, Environment.getInstance().getDairyId(), billToId);
-        InstructionCell.set(xssfSheet);
+    public static void setCustomerRow(XSSFSheet xssfSheet, int rowNumber, Contact contact, Terms terms) {
+        XSSFRow xssfRow = xssfSheet.createRow(rowNumber);
+
+        XSSFCell xssfCell = xssfRow.createCell(0);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_BOLD_ALIGN_LEFT_YELLOW);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("[" + String.format("%1$5s", contact.getId()) + "] " + contact.getName());
+        xssfSheet.addMergedRegion(new CellRangeAddress(xssfRow.getRowNum(), xssfRow.getRowNum(), 0, 3));
+
+        xssfCell = xssfRow.createCell(4);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_BOLD_ALIGN_RIGHT_YELLOW);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue(StringUtils.normalizeSpace(terms.getName()));
+        xssfSheet.addMergedRegion(new CellRangeAddress(xssfRow.getRowNum(), xssfRow.getRowNum(), 4, 6));
     }
 
-    public void setCustomerColumn(int rowNumber, Contact contact) {
-        XSSFCell cell = xssfSheet.getRow(rowNumber).getCell(0);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getCustomerColumnStyle());
-        cell.setCellType(CellType.STRING);
-        cell.setCellValue("[" + String.format("%1$5s", contact.getId()) + "] " + contact.getName());
+    public static void setCustomerInvoiceRow(XSSFSheet xssfSheet,
+                                             int rowNumber,
+                                             LocalDate deliveryDate,
+                                             LocalDate dueByDate,
+                                             int invoiceId,
+                                             double points,
+                                             int quantity,
+                                             double subTotal) {
+        XSSFRow xssfRow = xssfSheet.getRow(rowNumber);
 
-        CellRangeAddress cellRangeAddress = new CellRangeAddress(rowNumber, rowNumber, 0, 2);
-        RegionUtil.setBorderLeft(BorderStyle.THIN, cellRangeAddress, xssfSheet);
-        RegionUtil.setBorderRight(BorderStyle.THIN, cellRangeAddress, xssfSheet);
-        RegionUtil.setBorderTop(BorderStyle.THIN, cellRangeAddress, xssfSheet);
-        RegionUtil.setBorderBottom(BorderStyle.THIN, cellRangeAddress, xssfSheet);
+        if (ObjectUtils.isEmpty(xssfRow)) xssfRow = xssfSheet.createRow(rowNumber);
+
+        XSSFCell xssfCell = xssfRow.createCell(1);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue(invoiceId);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_RIGHT_BORDERED);
+
+        xssfCell = xssfRow.createCell(2);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_CENTER_BORDERED);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue(deliveryDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+
+        xssfCell = xssfRow.createCell(3);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_RIGHT_BORDERED_DOUBLE);
+        xssfCell.setCellType(CellType.NUMERIC);
+        xssfCell.setCellValue(points);
+
+        xssfCell = xssfRow.createCell(4);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_RIGHT_BORDERED_INTEGER);
+        xssfCell.setCellType(CellType.NUMERIC);
+        xssfCell.setCellValue(quantity);
+
+        xssfCell = xssfRow.createCell(5);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_RIGHT_BORDERED_CURRENCY);
+        xssfCell.setCellType(CellType.NUMERIC);
+        xssfCell.setCellValue(subTotal);
+
+        xssfCell = xssfRow.createCell(6);
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_ALIGN_CENTER_BORDERED);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue(dueByDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
     }
 
-    public void set(int rowNumber,
-                    LocalDate deliveryDate,
-                    LocalDate dueByDate,
-                    int invoiceId,
-                    double points,
-                    int quantity,
-                    double subTotal) {
-        XSSFCell cell = xssfSheet.getRow(rowNumber).getCell(3);
-        cell.setCellType(CellType.STRING);
-        cell.setCellValue(invoiceId);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getInvoiceColumnStyle());
+    public static void setCustomerTotal(XSSFSheet xssfSheet,
+                                        int rowNumber,
+                                        int startingCanonicalRow,
+                                        int endingCanonicalRow) {
+        XSSFRow xssfRow = xssfSheet.createRow(rowNumber);
 
-        cell = xssfSheet.getRow(rowNumber).getCell(4);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getDeliveryDateColumnStyle());
-        cell.setCellType(CellType.STRING);
-        cell.setCellValue(deliveryDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+        XSSFCell xssfCell = xssfRow.createCell(1);
+        xssfCell.removeFormula();
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_10_POINT_BOLD_ALIGN_RIGHT_YELLOW);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("CUSTOMER SUBTOTAL");
+        xssfSheet.addMergedRegion(new CellRangeAddress(xssfRow.getRowNum(), xssfRow.getRowNum(), 1, 2));
 
-        cell = xssfSheet.getRow(rowNumber).getCell(5);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getPointsColumnStyle());
-        cell.setCellType(CellType.NUMERIC);
-        cell.setCellValue(points);
+        xssfCell = xssfRow.createCell(3);
+        xssfCell.removeFormula();
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_BOLD_ALIGN_RIGHT_BORDERED_DOUBLE_YELLOW);
+        xssfCell.setCellFormula("SUM(D" + startingCanonicalRow + ":D" + endingCanonicalRow + ")");
+        pointsSubtotalCellReferences.add(xssfCell.getReference());
 
-        cell = xssfSheet.getRow(rowNumber).getCell(6);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getQuantityColumnStyle());
-        cell.setCellType(CellType.NUMERIC);
-        cell.setCellValue(quantity);
+        xssfCell = xssfRow.createCell(4);
+        xssfCell.removeFormula();
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_BOLD_ALIGN_RIGHT_BORDERED_INTEGER_YELLOW);
+        xssfCell.setCellFormula("SUM(E" + startingCanonicalRow + ":E" + endingCanonicalRow + ")");
+        quantitySubtotalCellReferences.add(xssfCell.getReference());
 
-        cell = xssfSheet.getRow(rowNumber).getCell(7);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getTotalColumnStyle());
-        cell.setCellType(CellType.NUMERIC);
-        cell.setCellValue(subTotal);
-
-        cell = xssfSheet.getRow(rowNumber).getCell(8);
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getDueByDateColumnStyle());
-        cell.setCellType(CellType.STRING);
-        cell.setCellValue(dueByDate.format(DateTimeFormatter.ofPattern("MM/dd/yyyy")));
+        xssfCell = xssfRow.createCell(5);
+        xssfCell.removeFormula();
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_10_POINT_BOLD_ALIGN_RIGHT_BORDERED_CURRENCY_YELLOW);
+        xssfCell.setCellFormula("SUM(F" + startingCanonicalRow + ":F" + endingCanonicalRow + ")");
+        amountDueSubtotalCellReferences.add(xssfCell.getReference());
     }
 
-    public void setCustomerTotal(int rowNumber,
-                                 int startingCanonicalRow,
-                                 int endingCanonicalRow) {
-        XSSFCell cell = xssfSheet.getRow(rowNumber).getCell(5);
-        cell.removeFormula();
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getPointsSubtotalStyle());
-        cell.setCellFormula("SUM(F" + startingCanonicalRow + ":F" + endingCanonicalRow + ")");
-        pointsSubtotalCellReferences.add(cell.getReference());
+    public static void setTotal(XSSFSheet xssfSheet, int rowNumber) {
+        XSSFRow xssfRow = xssfSheet.createRow(rowNumber);
 
-        cell = xssfSheet.getRow(rowNumber).getCell(6);
-        cell.removeFormula();
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getQuantitySubtotalStyle());
-        cell.setCellFormula("SUM(G" + startingCanonicalRow + ":G" + endingCanonicalRow + ")");
-        quantitySubtotalCellReferences.add(cell.getReference());
+        XSSFCell xssfCell = xssfRow.createCell(1);
+        xssfCell.removeFormula();
+        //xssfCell.setCellStyle(WorkbookEnvironment.PROPORTIONAL_FONT_12_POINT_BOLD_ALIGN_RIGHT_BLUE);
+        xssfCell.setCellType(CellType.STRING);
+        xssfCell.setCellValue("REMITTANCE TOTAL");
+        xssfSheet.addMergedRegion(new CellRangeAddress(xssfRow.getRowNum(), xssfRow.getRowNum(), 1, 2));
 
-        cell = xssfSheet.getRow(rowNumber).getCell(7);
-        cell.removeFormula();
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getAmountDueSubtotalStyle());
-        cell.setCellFormula("SUM(H" + startingCanonicalRow + ":H" + endingCanonicalRow + ")");
-        amountDueSubtotalCellReferences.add(cell.getReference());
-    }
+        xssfCell = xssfRow.createCell(3);
+        xssfCell.removeFormula();
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_12_POINT_BOLD_ALIGN_RIGHT_BORDERED_DOUBLE);
+        xssfCell.setCellFormula(StringUtils.join(pointsSubtotalCellReferences, "+"));
 
-    public void setTotal(int rowNumber) {
-        XSSFCell cell = xssfSheet.getRow(rowNumber).getCell(5);
-        cell.removeFormula();
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getPointsTotalStyle());
-        cell.setCellFormula(StringUtils.join(pointsSubtotalCellReferences, "+"));
+        xssfCell = xssfRow.createCell(4);
+        xssfCell.removeFormula();
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_12_POINT_BOLD_ALIGN_RIGHT_BORDERED_DOUBLE);
+        xssfCell.setCellFormula(StringUtils.join(quantitySubtotalCellReferences, "+"));
 
-        cell = xssfSheet.getRow(rowNumber).getCell(6);
-        cell.removeFormula();
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getQuantityTotalStyle());
-        cell.setCellFormula(StringUtils.join(quantitySubtotalCellReferences, "+"));
-
-        cell = xssfSheet.getRow(rowNumber).getCell(7);
-        cell.removeFormula();
-        cell.setCellStyle(WorkbookEnvironment.getInstance().getAmountDueTotalStyle());
-        cell.setCellFormula(StringUtils.join(amountDueSubtotalCellReferences, "+"));
+        xssfCell = xssfRow.createCell(5);
+        xssfCell.removeFormula();
+        //xssfCell.setCellStyle(WorkbookEnvironment.MONOSPACE_FONT_12_POINT_BOLD_ALIGN_RIGHT_BORDERED_CURRENCY);
+        xssfCell.setCellFormula(StringUtils.join(amountDueSubtotalCellReferences, "+"));
     }
 }

@@ -41,7 +41,7 @@ public class PdfService implements Callable<DocumentThread> {
 
         try {
             createDocument();
-            emailDocument();
+            //emailDocument();
             archiveDocument();
         } catch (Exception exception) {
             threadException = exception;
@@ -55,9 +55,9 @@ public class PdfService implements Callable<DocumentThread> {
 
     private void createDocument() throws IOException {
         documentName = "Invoice_" +
-                String.format("%03d", Environment.getInstance().getDairyId()) +
+                Environment.getInstance().getDairyIdAsText() +
                 "_" +
-                String.format("%03d", centralBillInvoice.getCentralBill().getContact().getId()) +
+                centralBillInvoice.getCentralBill().getIdAsText() +
                 "_" +
                 Environment.getInstance().billingDateAsYYMMD() +
                 StringUtils.normalizeSpace(centralBillInvoice.getCentralBill().getDocumentType().fileExtension);
@@ -98,7 +98,7 @@ public class PdfService implements Callable<DocumentThread> {
                         document,
                         centralBillInvoice.getCentralBill().getRemit().getContact(),
                         centralBillInvoice.getCentralBill().getContact(),
-                        new ItemSort(centralBillInvoice.getCustomerInvoices()).sort()
+                        ItemSort.sort(centralBillInvoice.getCustomerInvoices())
                 );
 
                 itemSummaryPage.generate();
